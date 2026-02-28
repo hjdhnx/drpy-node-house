@@ -13,6 +13,7 @@
     "pm2:restart": "pm2 restart drpysh",
     "pm2:delete": "pm2 delete drpysh",
     "pm2:logs": "pm2 logs drpysh",
+    "reset-password": "bun scripts/manage_roles.js reset-password",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
