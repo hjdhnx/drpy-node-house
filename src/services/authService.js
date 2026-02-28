@@ -22,12 +22,15 @@ export async function getRegistrationPolicy() {
 }
 
 export async function getUploadConfig() {
-  const stmt = db.prepare("SELECT key, value FROM settings WHERE key IN ('allowed_extensions', 'max_file_size')");
+  const stmt = db.prepare("SELECT key, value FROM settings");
   const results = stmt.all();
   
   const config = {
     allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-    max_file_size: 102400
+    max_file_size: 102400,
+    anonymous_upload: 'false',
+    anonymous_preview: 'false',
+    anonymous_download: 'false'
   };
 
   results.forEach(row => {

@@ -88,7 +88,10 @@ try {
 const defaultSettings = {
   registration_policy: 'open', // open, closed, approval, invite
   allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-  max_file_size: '102400' // 100KB in bytes
+  max_file_size: '102400', // 100KB in bytes
+  anonymous_upload: 'false',
+  anonymous_preview: 'false',
+  anonymous_download: 'false'
 };
 
 for (const [key, value] of Object.entries(defaultSettings)) {

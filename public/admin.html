@@ -299,6 +299,69 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div class="pt-6 border-t border-gray-100">
+                                        <div class="border-b border-gray-100 pb-3 mb-5">
+                                            <h3 class="text-lg font-semibold text-gray-900 mb-1">匿名访问控制</h3>
+                                            <p class="text-sm text-gray-500">管理未登录用户的权限</p>
+                                        </div>
+                                        
+                                        <div class="space-y-4">
+                                            <!-- Anonymous Upload -->
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <label class="text-sm font-medium text-gray-700">匿名上传</label>
+                                                    <p class="text-xs text-gray-500">允许未登录用户上传文件</p>
+                                                </div>
+                                                <button 
+                                                    @click="settings.anonymous_upload = settings.anonymous_upload === 'true' ? 'false' : 'true'" 
+                                                    :class="settings.anonymous_upload === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
+                                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                                >
+                                                    <span 
+                                                        :class="settings.anonymous_upload === 'true' ? 'translate-x-5' : 'translate-x-0'" 
+                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                    ></span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Anonymous Preview -->
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <label class="text-sm font-medium text-gray-700">匿名预览</label>
+                                                    <p class="text-xs text-gray-500">允许未登录用户预览文件</p>
+                                                </div>
+                                                <button 
+                                                    @click="settings.anonymous_preview = settings.anonymous_preview === 'true' ? 'false' : 'true'" 
+                                                    :class="settings.anonymous_preview === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
+                                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                                >
+                                                    <span 
+                                                        :class="settings.anonymous_preview === 'true' ? 'translate-x-5' : 'translate-x-0'" 
+                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                    ></span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Anonymous Download -->
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <label class="text-sm font-medium text-gray-700">匿名下载</label>
+                                                    <p class="text-xs text-gray-500">允许未登录用户下载文件</p>
+                                                </div>
+                                                <button 
+                                                    @click="settings.anonymous_download = settings.anonymous_download === 'true' ? 'false' : 'true'" 
+                                                    :class="settings.anonymous_download === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
+                                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                                >
+                                                    <span 
+                                                        :class="settings.anonymous_download === 'true' ? 'translate-x-5' : 'translate-x-0'" 
+                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                    ></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Right Column -->

@@ -12,7 +12,14 @@ export default async function (fastify, opts) {
       await request.jwtVerify();
       user = request.user;
     } catch (e) {
-      // Anonymous upload allowed
+      // Ignore
+    }
+
+    const config = await getUploadConfig();
+    
+    // Check anonymous upload setting
+    if (!user && config.anonymous_upload !== 'true') {
+        return reply.code(401).send({ error: 'Anonymous upload is disabled. Please login.' });
     }
 
     const data = await request.file();
@@ -22,7 +29,6 @@ export default async function (fastify, opts) {
     }
 
     // Validation
-    const config = await getUploadConfig();
     const allowedExtensions = config.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
     const ext = path.extname(data.filename).toLowerCase();
     
@@ -93,6 +99,17 @@ export default async function (fastify, opts) {
       }
     } catch (e) {
       // Ignore
+    }
+
+    const config = await getUploadConfig();
+
+    if (!user) {
+        if (isPreview && config.anonymous_preview !== 'true') {
+            return reply.code(401).send({ error: 'Anonymous preview is disabled. Please login.' });
+        }
+        if (!isPreview && config.anonymous_download !== 'true') {
+             return reply.code(401).send({ error: 'Anonymous download is disabled. Please login.' });
+        }
     }
 
     try {

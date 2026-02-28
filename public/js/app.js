@@ -34,7 +34,23 @@ createApp({
         const registrationPolicy = ref('open');
         const uploadConfig = ref({
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-            max_file_size: 102400
+            max_file_size: 102400,
+            anonymous_upload: 'false',
+            anonymous_preview: 'false',
+            anonymous_download: 'false'
+        });
+
+        // Computed permissions
+        const canUpload = computed(() => {
+            return user.value || uploadConfig.value.anonymous_upload === 'true';
+        });
+
+        const canPreview = computed(() => {
+            return user.value || uploadConfig.value.anonymous_preview === 'true';
+        });
+
+        const canDownload = computed(() => {
+            return user.value || uploadConfig.value.anonymous_download === 'true';
         });
 
         // Watchers
@@ -461,7 +477,10 @@ createApp({
             itemsPerPage,
             totalPages,
             uploadConfig,
-            registrationPolicy
+            registrationPolicy,
+            canUpload,
+            canPreview,
+            canDownload
         };
     }
 }).mount('#app');

@@ -15,7 +15,10 @@ createApp({
         const settings = ref({ 
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-            max_file_size: 102400
+            max_file_size: 102400,
+            anonymous_upload: 'false',
+            anonymous_preview: 'false',
+            anonymous_download: 'false'
         });
         const invites = ref([]);
         const notification = ref({ show: false, message: '', type: 'success' });
