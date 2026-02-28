@@ -50,7 +50,8 @@ export const zh = {
     pageInfo: '第 {page} 页 / 共 {total} 页',
     itemsPerPage: '每页显示',
     searchPlaceholder: '搜索文件...',
-    search: '搜索'
+    search: '搜索',
+    registerSuccessWait: '注册成功，请等待管理员审核。'
 };
 
 export const en = {
@@ -105,5 +106,6 @@ export const en = {
     pageInfo: 'Page {page} of {total}',
     itemsPerPage: 'Per Page',
     searchPlaceholder: 'Search files...',
-    search: 'Search'
+    search: 'Search',
+    registerSuccessWait: 'Registration successful. Please wait for admin approval.'
 };

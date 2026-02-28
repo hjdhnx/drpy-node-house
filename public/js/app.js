@@ -118,12 +118,17 @@ createApp({
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    token.value = data.token;
-                    localStorage.setItem('token', data.token);
-                    user.value = data.user;
+                    if (data.token) {
+                        token.value = data.token;
+                        localStorage.setItem('token', data.token);
+                        user.value = data.user;
+                        fetchFiles();
+                    } else {
+                        // Pending approval or other status without token
+                        alert(data.message || t.value.registerSuccessWait);
+                    }
                     showRegister.value = false;
                     authForm.value = { username: '', password: '' };
-                    fetchFiles();
                 } else {
                     authError.value = data.error || t.value.registerFailed;
                 }
