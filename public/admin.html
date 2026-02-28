@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理 - 去中心化文件存储</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        [v-cloak] { display: none; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .sidebar-link {
+            transition: all 0.2s;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex bg-gray-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]">
+    <div id="app" v-cloak class="flex w-full h-full">
+        <!-- Sidebar -->
+        <aside class="w-64 glass-panel border-r border-gray-200 flex flex-col z-10">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-gray-800">系统管理后台</h1>
+                <a href="/" class="text-sm text-blue-500 hover:underline mt-2 block">← 返回首页</a>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" @click.prevent="currentView = 'users'" 
+                   :class="['sidebar-link block px-4 py-2 rounded-lg text-gray-600', currentView === 'users' ? 'active bg-gray-100 font-medium' : '']">
+                   用户管理
+                </a>
+                <a href="#" @click.prevent="currentView = 'settings'" 
+                   :class="['sidebar-link block px-4 py-2 rounded-lg text-gray-600', currentView === 'settings' ? 'active bg-gray-100 font-medium' : '']">
+                   系统设置
+                </a>
+                <a href="#" @click.prevent="currentView = 'invites'" 
+                   :class="['sidebar-link block px-4 py-2 rounded-lg text-gray-600', currentView === 'invites' ? 'active bg-gray-100 font-medium' : '']">
+                   邀请码管理
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                        {{ user?.username?.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700">{{ user?.username }}</p>
+                        <p class="text-xs text-gray-500">管理员</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-8">
+            <!-- Users View -->
+            <div v-if="currentView === 'users'">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">用户管理</h2>
+                <div class="glass-panel rounded-xl shadow-sm overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户名</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr v-for="u in users" :key="u.id" class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ u.id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ u.username }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <span :class="u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                        {{ u.role }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <span :class="{
+                                        'bg-green-100 text-green-800': u.status === 'active',
+                                        'bg-yellow-100 text-yellow-800': u.status === 'pending',
+                                        'bg-red-100 text-red-800': u.status === 'banned'
+                                    }" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                        {{ u.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(u.created_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button v-if="u.status === 'pending'" @click="updateUserStatus(u.id, 'active')" class="text-green-600 hover:text-green-900">通过</button>
+                                    <button v-if="u.status !== 'banned' && u.role !== 'admin'" @click="updateUserStatus(u.id, 'banned')" class="text-red-600 hover:text-red-900">封禁</button>
+                                    <button v-if="u.status === 'banned'" @click="updateUserStatus(u.id, 'active')" class="text-green-600 hover:text-green-900">解封</button>
+                                    <button v-if="u.role !== 'admin'" @click="updateUserRole(u.id, 'admin')" class="text-purple-600 hover:text-purple-900">设为管理员</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div v-if="currentView === 'settings'">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">系统设置</h2>
+                <div class="glass-panel rounded-xl shadow-sm p-6 max-w-2xl space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">注册策略</label>
+                        <select v-model="settings.registration_policy" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border bg-white/50 backdrop-blur-sm">
+                            <option value="open">开放注册 (Open)</option>
+                            <option value="closed">关闭注册 (Closed)</option>
+                            <option value="approval">需要审核 (Approval)</option>
+                            <option value="invite">仅限邀请 (Invite Only)</option>
+                        </select>
+                        <p class="mt-2 text-sm text-gray-500">
+                            控制用户注册系统的行为。
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">允许的文件类型</label>
+                        <input type="text" v-model="settings.allowed_extensions" class="mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border bg-white/50 backdrop-blur-sm" placeholder=".json,.txt,.py,.php,.js,.m3u">
+                        <p class="mt-2 text-sm text-gray-500">
+                            允许上传的文件后缀名，用逗号分隔。
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">最大文件大小 (Bytes)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" v-model.number="settings.max_file_size" class="mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border bg-white/50 backdrop-blur-sm">
+                            <span class="text-sm text-gray-500 w-32 text-right">{{ formatSize(settings.max_file_size) }}</span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            限制上传文件的最大字节数 (100KB = 102400)。
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end pt-4 border-t border-gray-200">
+                        <button @click="saveSettings" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">保存设置</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invites View -->
+            <div v-if="currentView === 'invites'">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">邀请码管理</h2>
+                    <button @click="createInvite" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                        <span class="mr-2">+</span> 生成邀请码
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">邀请码</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建者</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">使用次数</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">过期时间</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="invite in invites" :key="invite.code">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-blue-600 font-medium">{{ invite.code }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ invite.created_by_username }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ invite.used_count }} / {{ invite.max_uses === 0 ? '∞' : invite.max_uses }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ invite.expires_at ? formatDate(invite.expires_at) : '永久有效' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button @click="deleteInvite(invite.code)" class="text-red-600 hover:text-red-900">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-if="invites.length === 0" class="p-8 text-center text-gray-500">
+                        暂无邀请码
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Notification Toast -->
+        <div v-if="notification.show" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center transition-opacity duration-300" :class="notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'">
+            {{ notification.message }}
+        </div>
+    </div>
+    <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

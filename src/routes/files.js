@@ -1,4 +1,6 @@
 import { uploadFile, listFiles, getFileStream, toggleVisibility, deleteFile } from '../services/fileService.js';
+import { getUploadConfig } from '../services/authService.js';
+import path from 'path';
 
 export default async function (fastify, opts) {
   
@@ -19,17 +21,36 @@ export default async function (fastify, opts) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
+    // Validation
+    const config = await getUploadConfig();
+    const allowedExtensions = config.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
+    const ext = path.extname(data.filename).toLowerCase();
+    
+    if (!allowedExtensions.includes(ext)) {
+      // Consume stream to prevent hanging
+      data.file.resume();
+      return reply.code(400).send({ error: `File type not allowed. Allowed: ${config.allowed_extensions}` });
+    }
+
+    // Size check handled inside uploadFile (since it reads the stream)
+    // or we can wrap the stream here.
+    // Given uploadFile reads into buffer, let's pass the size limit to it.
+
     const isPublic = request.query.is_public !== 'false'; // Default true
     
     if (!isPublic && !user) {
+      data.file.resume();
       return reply.code(401).send({ error: 'You must be logged in to upload private files' });
     }
 
     try {
-      const result = await uploadFile(data, user ? user.id : null, isPublic);
+      const result = await uploadFile(data, user ? user.id : null, isPublic, config.max_file_size);
       return result;
     } catch (err) {
       request.log.error(err);
+      if (err.message.includes('File too large')) {
+        return reply.code(413).send({ error: err.message });
+      }
       return reply.code(500).send({ error: 'Upload failed' });
     }
   });

@@ -5,10 +5,12 @@ import fastifyCors from '@fastify/cors';
 import path from 'path';
 import config from './config.js';
 import { initHelia } from './ipfs.js';
+import { initSuperAdmin } from './services/authService.js';
 import db from './db.js'; // Ensures DB is initialized
 import fastifyJwt from '@fastify/jwt';
 import fileRoutes from './routes/files.js';
 import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin.js';
 
 const fastify = Fastify({
   logger: true
@@ -46,10 +48,12 @@ fastify.register(fastifyStatic, {
 // Register routes
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(fileRoutes, { prefix: '/api/files' });
+fastify.register(adminRoutes, { prefix: '/api/admin' });
 
 // Initialize services before starting
 fastify.addHook('onReady', async () => {
   await initHelia();
+  await initSuperAdmin();
 });
 
 // API Routes (Placeholder for now)

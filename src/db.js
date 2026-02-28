@@ -18,7 +18,30 @@ db.run(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    role TEXT DEFAULT 'user', -- 'admin', 'user'
+    status TEXT DEFAULT 'active', -- 'active', 'pending', 'banned'
     created_at INTEGER DEFAULT (strftime('%s', 'now'))
+  )
+`);
+
+// Settings Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  )
+`);
+
+// Invites Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS invites (
+    code TEXT PRIMARY KEY,
+    created_by INTEGER,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    max_uses INTEGER DEFAULT 1,
+    used_count INTEGER DEFAULT 0,
+    expires_at INTEGER,
+    FOREIGN KEY(created_by) REFERENCES users(id)
   )
 `);
 
@@ -42,14 +65,30 @@ db.run(`
 // Check if columns exist (migration for existing DB)
 try {
   db.run('ALTER TABLE files ADD COLUMN user_id INTEGER REFERENCES users(id)');
-} catch (e) {
-  // Column likely exists
-}
+} catch (e) {}
 
 try {
   db.run('ALTER TABLE files ADD COLUMN is_public INTEGER DEFAULT 1');
-} catch (e) {
-  // Column likely exists
+} catch (e) {}
+
+// Migrate Users table
+try {
+  db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+} catch (e) {}
+
+try {
+  db.run("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'");
+} catch (e) {}
+
+// Seed default settings
+const defaultSettings = {
+  registration_policy: 'open', // open, closed, approval, invite
+  allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
+  max_file_size: '102400' // 100KB in bytes
+};
+
+for (const [key, value] of Object.entries(defaultSettings)) {
+  db.run('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', key, value);
 }
 
 console.log(`Database connected at ${dbPath}`);

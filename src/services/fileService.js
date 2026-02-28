@@ -2,11 +2,19 @@ import { getHelia } from '../ipfs.js';
 import db from '../db.js';
 import { CID } from 'multiformats/cid';
 
-export async function uploadFile(file, userId = null, isPublic = true) {
+export async function uploadFile(file, userId = null, isPublic = true, maxSize = 0) {
   const { fs } = await getHelia();
   
   const chunks = [];
+  let totalSize = 0;
+
   for await (const chunk of file.file) {
+    totalSize += chunk.length;
+    if (maxSize > 0 && totalSize > maxSize) {
+      // Consume remaining stream to avoid issues? Or just throw.
+      // Throwing might leave the stream open, but we are inside an async iterator.
+      throw new Error(`File too large. Max size: ${maxSize} bytes`);
+    }
     chunks.push(chunk);
   }
   const buffer = Buffer.concat(chunks);

@@ -29,8 +29,13 @@ createApp({
         const token = ref(localStorage.getItem('token') || null);
         const showLogin = ref(false);
         const showRegister = ref(false);
-        const authForm = ref({ username: '', password: '' });
+        const authForm = ref({ username: '', password: '', inviteCode: '' });
         const authError = ref('');
+        const registrationPolicy = ref('open');
+        const uploadConfig = ref({
+            allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
+            max_file_size: 102400
+        });
 
         // Upload options
         const isPublicUpload = ref(true);
@@ -42,6 +47,19 @@ createApp({
                 status.value = data.status;
             } catch (e) {
                 status.value = 'offline';
+            }
+        };
+
+        const fetchPolicy = async () => {
+            try {
+                const res = await fetch('/api/auth/policy');
+                const data = await res.json();
+                registrationPolicy.value = data.policy;
+                if (data.uploadConfig) {
+                    uploadConfig.value = data.uploadConfig;
+                }
+            } catch (e) {
+                console.error(e);
             }
         };
 
@@ -198,9 +216,7 @@ createApp({
 
         const handleFileSelect = async (event) => {
             const selectedFiles = Array.from(event.target.files);
-            if (selectedFiles.length > 0) {
-                await uploadFiles(selectedFiles);
-            }
+            validateAndUpload(selectedFiles);
         };
 
         const handleDrop = async (event) => {
@@ -231,7 +247,34 @@ createApp({
             }
 
             if (files.length > 0) {
-                await uploadFiles(files);
+                validateAndUpload(files);
+            }
+        };
+
+        const validateAndUpload = (files) => {
+            if (files.length === 0) return;
+            
+            const allowed = uploadConfig.value.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
+            const maxSize = uploadConfig.value.max_file_size;
+
+            const validFiles = files.filter(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                const isExtValid = allowed.includes(ext);
+                const isSizeValid = file.size <= maxSize;
+                
+                if (!isExtValid) {
+                    uploadStatusText.value = `Error: ${file.name} type not allowed`;
+                    setTimeout(() => uploadStatusText.value = '', 3000);
+                } else if (!isSizeValid) {
+                    uploadStatusText.value = `Error: ${file.name} too large`;
+                    setTimeout(() => uploadStatusText.value = '', 3000);
+                }
+
+                return isExtValid && isSizeValid;
+            });
+
+            if (validFiles.length > 0) {
+                uploadFiles(validFiles);
             }
         };
 
@@ -366,6 +409,7 @@ createApp({
             checkStatus();
             checkAuth();
             fetchFiles();
+            fetchPolicy();
         });
 
         return {
@@ -405,7 +449,8 @@ createApp({
             totalItems,
             currentPage,
             itemsPerPage,
-            totalPages
+            totalPages,
+            uploadConfig
         };
     }
 }).mount('#app');

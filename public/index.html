@@ -118,6 +118,12 @@
 
                 <template v-if="user">
                     <div class="flex items-center space-x-3 pl-2">
+                        <a v-if="user.role === 'admin'" href="/admin.html" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Admin Panel">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </a>
                         <div class="flex flex-col items-end">
                             <span class="text-sm font-semibold text-gray-700">{{ user.username }}</span>
                             <span class="text-xs text-green-600 bg-green-50 px-1.5 rounded">Verified</span>
@@ -171,7 +177,7 @@
                         @click="$refs.fileInput.click()"
                 :class="{'border-blue-500 bg-blue-50': uploading}"
             >
-                <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect" multiple>
+                <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect" multiple :accept="uploadConfig?.allowed_extensions">
                 
                 <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl transition-opacity duration-300" v-if="uploading">
                      <svg class="animate-spin h-10 w-10 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -188,7 +194,8 @@
                                 </svg>
                             </div>
                             <p class="text-gray-700 font-medium mb-1">{{ t.clickToUpload }}</p>
-                            <p class="text-gray-400 text-xs">{{ t.anyFileType }}</p>
+                            <p class="text-gray-400 text-xs mb-1">{{ uploadConfig?.allowed_extensions }}</p>
+                            <p class="text-gray-400 text-xs">Max size: {{ formatSize(uploadConfig?.max_file_size || 0) }}</p>
                         </div>
                     </div>
                     
@@ -404,14 +411,30 @@
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">{{ showLogin ? t.loginTitle : t.registerTitle }}</h2>
                 
                 <form @submit.prevent="showLogin ? login() : register()" class="space-y-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.username }}</label>
-                        <input v-model="authForm.username" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
+                    <div v-if="!showLogin && registrationPolicy === 'closed'" class="p-4 bg-red-50 text-red-600 rounded-xl text-center">
+                        <p class="font-medium">当前注册已关闭</p>
+                        <p class="text-sm mt-1">请联系管理员获取更多信息。</p>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.password }}</label>
-                        <input v-model="authForm.password" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
-                    </div>
+
+                    <template v-else>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.username }}</label>
+                            <input v-model="authForm.username" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.password }}</label>
+                            <input v-model="authForm.password" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
+                        </div>
+                        
+                        <div v-if="!showLogin && registrationPolicy === 'invite'">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">邀请码 <span class="text-red-500">*</span></label>
+                            <input v-model="authForm.inviteCode" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" placeholder="请输入邀请码" required>
+                        </div>
+
+                        <div v-if="!showLogin && registrationPolicy === 'approval'" class="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                            <span class="font-bold">注意：</span> 注册后需要管理员审核才能登录。
+                        </div>
+                    </template>
                     
                     <div v-if="authError" class="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -424,7 +447,7 @@
                         <button type="button" @click="showLogin = false; showRegister = false" class="px-5 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 font-medium transition-colors">
                             {{ t.cancel }}
                         </button>
-                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all">
+                        <button type="submit" v-if="showLogin || registrationPolicy !== 'closed'" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all">
                             {{ t.submit }}
                         </button>
                     </div>
