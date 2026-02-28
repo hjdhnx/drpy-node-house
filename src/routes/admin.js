@@ -18,9 +18,39 @@ export default async function (fastify, opts) {
   // List all users
   fastify.get('/users', { onRequest: [requireAdmin] }, async (request, reply) => {
     try {
-      const stmt = db.prepare('SELECT id, username, role, status, created_at FROM users ORDER BY created_at DESC');
-      const users = stmt.all();
-      return users;
+      const page = parseInt(request.query.page) || 1;
+      const limit = parseInt(request.query.limit) || 10;
+      const search = request.query.search || '';
+      const offset = (page - 1) * limit;
+
+      let countSql = 'SELECT count(*) as total FROM users';
+      let dataSql = 'SELECT id, username, role, status, reason, created_at FROM users';
+      const countParams = [];
+      const dataParams = [];
+
+      if (search) {
+        const whereClause = ' WHERE username LIKE ? OR reason LIKE ?';
+        countSql += whereClause;
+        dataSql += whereClause;
+        countParams.push(`%${search}%`, `%${search}%`);
+        dataParams.push(`%${search}%`, `%${search}%`);
+      }
+
+      dataSql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      dataParams.push(limit, offset);
+
+      const countStmt = db.prepare(countSql);
+      const total = countStmt.get(...countParams).total;
+
+      const stmt = db.prepare(dataSql);
+      const users = stmt.all(...dataParams);
+
+      return {
+        users,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Failed to fetch users' });

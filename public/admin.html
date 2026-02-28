@@ -149,14 +149,73 @@
             <div class="flex-1 px-8 pb-8 min-h-0 relative">
                 <transition name="fade" mode="out-in">
                 <!-- Users View -->
-                <div v-if="currentView === 'users'" key="users" class="h-full overflow-y-auto pr-2 space-y-6">
-                    <div class="glass-panel rounded-2xl shadow-sm overflow-hidden border-0 ring-1 ring-gray-900/5">
-                        <div class="overflow-x-auto">
+                <div v-if="currentView === 'users'" key="users" class="h-full flex flex-col space-y-6">
+                    <div class="glass-panel rounded-2xl shadow-sm overflow-hidden border-0 ring-1 ring-gray-900/5 flex flex-col h-full">
+                        <!-- Search & Filters -->
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center shrink-0">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </span>
+                                <input 
+                                    v-model="userSearchQuery" 
+                                    @keyup.enter="handleUserSearch"
+                                    type="text" 
+                                    placeholder="搜索用户或理由..." 
+                                    class="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white w-64 transition-all"
+                                >
+                                <button 
+                                    v-if="userSearchQuery" 
+                                    @click="clearUserSearch"
+                                    class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                <select v-model="usersPerPage" @change="changeUsersPerPage" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-2">
+                                    <option :value="10">10 / 页</option>
+                                    <option :value="20">20 / 页</option>
+                                    <option :value="30">30 / 页</option>
+                                    <option :value="50">50 / 页</option>
+                                    <option :value="100">100 / 页</option>
+                                </select>
+                                <div class="flex items-center space-x-1 ml-2">
+                                    <button 
+                                        @click="changeUserPage(currentUserPage - 1)" 
+                                        :disabled="currentUserPage === 1"
+                                        class="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <span class="px-2 font-medium">{{ currentUserPage }} / {{ totalUserPages }}</span>
+                                    <button 
+                                        @click="changeUserPage(currentUserPage + 1)" 
+                                        :disabled="currentUserPage === totalUserPages"
+                                        class="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-auto relative flex-1">
                             <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50/80 backdrop-blur-sm">
+                                <thead class="bg-gray-50/95 sticky top-0 z-10 backdrop-blur-sm shadow-sm">
                                     <tr>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">用户</th>
+                                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">申请理由</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">角色</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">状态</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">注册时间</th>
@@ -175,6 +234,9 @@
                                                     <div class="text-sm font-medium text-gray-900">{{ u.username }}</div>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500 truncate max-w-[200px]" :title="u.reason">{{ u.reason || '-' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700 ring-1 ring-purple-600/20' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10'" class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full">

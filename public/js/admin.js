@@ -6,6 +6,12 @@ createApp({
         const token = ref(localStorage.getItem('token') || null);
         const currentView = ref('users');
         const users = ref([]);
+        const totalUsers = ref(0);
+        const currentUserPage = ref(1);
+        const usersPerPage = ref(10);
+        const totalUserPages = ref(1);
+        const userSearchQuery = ref('');
+        
         const settings = ref({ 
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
@@ -51,11 +57,43 @@ createApp({
 
         const fetchUsers = async () => {
             try {
-                const res = await fetchWithAuth('/api/admin/users');
-                users.value = await res.json();
+                const res = await fetchWithAuth(`/api/admin/users?page=${currentUserPage.value}&limit=${usersPerPage.value}&search=${encodeURIComponent(userSearchQuery.value)}`);
+                const data = await res.json();
+                
+                if (data.users) {
+                    users.value = data.users;
+                    totalUsers.value = data.total;
+                    totalUserPages.value = data.totalPages;
+                    currentUserPage.value = data.page;
+                } else {
+                    // Backward compatibility
+                    users.value = data;
+                }
             } catch (e) {
                 console.error(e);
             }
+        };
+
+        const changeUserPage = (page) => {
+            if (page >= 1 && page <= totalUserPages.value) {
+                currentUserPage.value = page;
+                fetchUsers();
+            }
+        };
+
+        const changeUsersPerPage = () => {
+            currentUserPage.value = 1;
+            fetchUsers();
+        };
+
+        const handleUserSearch = () => {
+            currentUserPage.value = 1;
+            fetchUsers();
+        };
+
+        const clearUserSearch = () => {
+            userSearchQuery.value = '';
+            handleUserSearch();
         };
 
         const fetchSettings = async () => {
@@ -238,7 +276,15 @@ createApp({
             deleteInvite,
             formatDate,
             formatSize,
-            copyToClipboard
+            copyToClipboard,
+            currentUserPage,
+            usersPerPage,
+            totalUserPages,
+            changeUserPage,
+            changeUsersPerPage,
+            userSearchQuery,
+            handleUserSearch,
+            clearUserSearch
         };
     }
 }).mount('#app');

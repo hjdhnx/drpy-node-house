@@ -51,7 +51,9 @@ export const zh = {
     itemsPerPage: '每页显示',
     searchPlaceholder: '搜索文件...',
     search: '搜索',
-    registerSuccessWait: '注册成功，请等待管理员审核。'
+    registerSuccessWait: '注册成功，请等待管理员审核。',
+    reason: '申请理由',
+    reasonPlaceholder: '请输入申请理由，以便管理员审核'
 };
 
 export const en = {
@@ -107,5 +109,7 @@ export const en = {
     itemsPerPage: 'Per Page',
     searchPlaceholder: 'Search files...',
     search: 'Search',
-    registerSuccessWait: 'Registration successful. Please wait for admin approval.'
+    registerSuccessWait: 'Registration successful. Please wait for admin approval.',
+    reason: 'Application Reason',
+    reasonPlaceholder: 'Please enter your reason for registration'
 };

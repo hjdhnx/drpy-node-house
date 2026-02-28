@@ -80,6 +80,10 @@ try {
   db.run("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'");
 } catch (e) {}
 
+try {
+  db.run("ALTER TABLE users ADD COLUMN reason TEXT");
+} catch (e) {}
+
 // Seed default settings
 const defaultSettings = {
   registration_policy: 'open', // open, closed, approval, invite

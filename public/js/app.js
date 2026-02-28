@@ -29,7 +29,7 @@ createApp({
         const token = ref(localStorage.getItem('token') || null);
         const showLogin = ref(false);
         const showRegister = ref(false);
-        const authForm = ref({ username: '', password: '', inviteCode: '' });
+        const authForm = ref({ username: '', password: '', inviteCode: '', reason: '' });
         const authError = ref('');
         const registrationPolicy = ref('open');
         const uploadConfig = ref({
@@ -98,7 +98,7 @@ createApp({
                     localStorage.setItem('token', data.token);
                     user.value = data.user;
                     showLogin.value = false;
-                    authForm.value = { username: '', password: '' };
+                    authForm.value = { username: '', password: '', reason: '' };
                     fetchFiles();
                 } else {
                     authError.value = data.error || t.value.loginFailed;
@@ -128,7 +128,7 @@ createApp({
                         alert(data.message || t.value.registerSuccessWait);
                     }
                     showRegister.value = false;
-                    authForm.value = { username: '', password: '' };
+                    authForm.value = { username: '', password: '', reason: '' };
                 } else {
                     authError.value = data.error || t.value.registerFailed;
                 }

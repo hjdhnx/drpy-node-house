@@ -9,14 +9,14 @@ export default async function (fastify, opts) {
   });
   
   fastify.post('/register', async (request, reply) => {
-    const { username, password, inviteCode } = request.body;
+    const { username, password, inviteCode, reason } = request.body;
     
     if (!username || !password) {
       return reply.code(400).send({ error: 'Username and password are required' });
     }
 
     try {
-      const user = await registerUser(username, password, inviteCode);
+      const user = await registerUser(username, password, inviteCode, reason);
       
       if (user.status === 'pending') {
         return { user, message: 'Registration successful. Please wait for admin approval.' };
@@ -31,6 +31,9 @@ export default async function (fastify, opts) {
       }
       if (err.message === 'Registration is currently closed' || err.message === 'Invitation code is required' || err.message === 'Invalid or expired invitation code') {
         return reply.code(403).send({ error: err.message });
+      }
+      if (err.message === 'Application reason is required') {
+        return reply.code(400).send({ error: err.message });
       }
       request.log.error(err);
       return reply.code(500).send({ error: 'Registration failed' });

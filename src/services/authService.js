@@ -41,7 +41,7 @@ export async function getUploadConfig() {
   return config;
 }
 
-export async function registerUser(username, password, inviteCode = null) {
+export async function registerUser(username, password, inviteCode = null, reason = null) {
   // 1. Check Registration Policy
   const policy = await getRegistrationPolicy();
 
@@ -69,6 +69,10 @@ export async function registerUser(username, password, inviteCode = null) {
   // If policy is 'approval', status is 'pending'. Otherwise 'active'.
   const initialStatus = policy === 'approval' ? 'pending' : 'active';
 
+  if (policy === 'approval' && !reason) {
+    throw new Error('Application reason is required');
+  }
+
   // 4. Check if user exists
   const check = db.prepare('SELECT id FROM users WHERE username = ?');
   if (check.get(username)) {
@@ -76,10 +80,10 @@ export async function registerUser(username, password, inviteCode = null) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const stmt = db.prepare('INSERT INTO users (username, password, role, status) VALUES (?, ?, ?, ?)');
+  const stmt = db.prepare('INSERT INTO users (username, password, role, status, reason) VALUES (?, ?, ?, ?, ?)');
   
   // Default role is 'user'
-  const info = stmt.run(username, hashedPassword, 'user', initialStatus);
+  const info = stmt.run(username, hashedPassword, 'user', initialStatus, reason);
   return { id: info.lastInsertRowid, username, role: 'user', status: initialStatus };
 }
 
