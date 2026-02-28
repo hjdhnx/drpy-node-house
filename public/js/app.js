@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted, computed, reactive } from 'vue';
+import { createApp, ref, onMounted, computed, reactive, watch } from 'vue';
 import { zh, en } from './i18n.js';
 
 createApp({
@@ -35,6 +35,11 @@ createApp({
         const uploadConfig = ref({
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
             max_file_size: 102400
+        });
+
+        // Watchers
+        watch([showLogin, showRegister], () => {
+            authError.value = '';
         });
 
         // Upload options
@@ -450,7 +455,8 @@ createApp({
             currentPage,
             itemsPerPage,
             totalPages,
-            uploadConfig
+            uploadConfig,
+            registrationPolicy
         };
     }
 }).mount('#app');
