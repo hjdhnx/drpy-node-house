@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted } from 'vue';
+import { createApp, ref, onMounted, watch } from 'vue';
 
 createApp({
     setup() {
@@ -13,6 +13,11 @@ createApp({
         });
         const invites = ref([]);
         const notification = ref({ show: false, message: '', type: 'success' });
+        
+        // UI State
+        const loading = ref(false);
+        const showInviteModal = ref(false);
+        const inviteForm = ref({ max_uses: 1 });
 
         const formatSize = (bytes) => {
             if (bytes === 0) return '0 B';
@@ -39,8 +44,6 @@ createApp({
             };
             const res = await fetch(url, { ...options, headers });
             if (res.status === 401 || res.status === 403) {
-                // Do not redirect immediately, let caller handle or just log
-                // window.location.href = '/';
                 throw new Error('Unauthorized');
             }
             return res;
@@ -58,7 +61,10 @@ createApp({
         const fetchSettings = async () => {
             try {
                 const res = await fetchWithAuth('/api/admin/settings');
-                settings.value = await res.json();
+                const data = await res.json();
+                // Ensure max_file_size is number
+                if (data.max_file_size) data.max_file_size = parseInt(data.max_file_size);
+                settings.value = { ...settings.value, ...data };
             } catch (e) {
                 console.error(e);
             }
@@ -110,10 +116,15 @@ createApp({
         };
 
         const saveSettings = async () => {
+            loading.value = true;
             try {
+                // Ensure correct types
+                const payload = { ...settings.value };
+                payload.max_file_size = parseInt(payload.max_file_size);
+
                 const res = await fetchWithAuth('/api/admin/settings', {
                     method: 'PUT',
-                    body: JSON.stringify(settings.value)
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
                     showNotification('设置已保存');
@@ -121,27 +132,30 @@ createApp({
                     showNotification('保存失败', 'error');
                 }
             } catch (e) {
-                showNotification('保存失败', 'error');
+                showNotification('保存失败: ' + e.message, 'error');
+            } finally {
+                loading.value = false;
             }
         };
 
         const createInvite = async () => {
-            const maxUses = prompt('请输入最大使用次数 (0为不限):', '1');
-            if (maxUses === null) return;
-            
+            loading.value = true;
             try {
                 const res = await fetchWithAuth('/api/admin/invites', {
                     method: 'POST',
-                    body: JSON.stringify({ max_uses: parseInt(maxUses) })
+                    body: JSON.stringify({ max_uses: parseInt(inviteForm.value.max_uses) || 1 })
                 });
                 if (res.ok) {
                     showNotification('邀请码已生成');
+                    showInviteModal.value = false;
                     fetchInvites();
                 } else {
                     showNotification('生成失败', 'error');
                 }
             } catch (e) {
-                showNotification('生成失败', 'error');
+                showNotification('生成失败: ' + e.message, 'error');
+            } finally {
+                loading.value = false;
             }
         };
 
@@ -164,13 +178,23 @@ createApp({
 
         const formatDate = (timestamp) => {
             if (!timestamp) return '-';
-            // Check if timestamp is seconds or milliseconds
             const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
             return date.toLocaleString('zh-CN');
         };
+        
+        const copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text);
+            showNotification('已复制到剪贴板');
+        };
+
+        // Watchers for view changes
+        watch(currentView, (newView) => {
+            if (newView === 'users') fetchUsers();
+            if (newView === 'settings') fetchSettings();
+            if (newView === 'invites') fetchInvites();
+        });
 
         onMounted(async () => {
-            // Decode token to get user info
             if (token.value) {
                 try {
                     const base64Url = token.value.split('.')[1];
@@ -193,11 +217,8 @@ createApp({
                 return;
             }
 
-            await Promise.all([
-                fetchUsers(),
-                fetchSettings(),
-                fetchInvites()
-            ]);
+            // Initial fetch based on current view
+            fetchUsers();
         });
 
         return {
@@ -207,13 +228,17 @@ createApp({
             settings,
             invites,
             notification,
+            loading,
+            showInviteModal,
+            inviteForm,
             updateUserStatus,
             updateUserRole,
             saveSettings,
             createInvite,
             deleteInvite,
             formatDate,
-            formatSize
+            formatSize,
+            copyToClipboard
         };
     }
-});
+}).mount('#app');
