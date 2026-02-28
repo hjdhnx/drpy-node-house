@@ -445,6 +445,7 @@ createApp({
 
         const isOwner = (file) => {
             if (!user.value) return false;
+            if (user.value.role === 'super_admin') return true;
             return file.user_id === user.value.id;
         };
 

@@ -41,16 +41,21 @@ export async function uploadFile(file, userId = null, isPublic = true, maxSize =
   };
 }
 
-export function listFiles(userId = null, page = 1, limit = 10, search = '', tag = '') {
+export function listFiles(userId = null, page = 1, limit = 10, search = '', tag = '', userRole = 'user') {
   // Base query condition
   // We need to handle complex logic: (is_public OR is_owner) AND (filename LIKE %search%)
   
-  let whereClause = 'WHERE (is_public = 1';
+  let whereClause = 'WHERE (1=1'; // Start with true
   const params = [];
 
-  if (userId) {
-    whereClause += ' OR user_id = ?';
-    params.push(userId);
+  // Permission check
+  if (userRole !== 'super_admin') {
+    whereClause += ' AND (is_public = 1';
+    if (userId) {
+      whereClause += ' OR user_id = ?';
+      params.push(userId);
+    }
+    whereClause += ')';
   }
   whereClause += ')';
 
@@ -123,12 +128,12 @@ export async function getFileStream(cidString, userId = null) {
   };
 }
 
-export function toggleVisibility(cidString, userId) {
+export function toggleVisibility(cidString, userId, userRole = 'user') {
   const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
   const file = stmt.get(cidString);
 
   if (!file) throw new Error('File not found');
-  if (file.user_id !== userId) throw new Error('Unauthorized');
+  if (file.user_id !== userId && userRole !== 'super_admin') throw new Error('Unauthorized');
 
   const newStatus = file.is_public === 1 ? 0 : 1;
   const updateStmt = db.prepare('UPDATE files SET is_public = ? WHERE id = ?');
@@ -137,12 +142,12 @@ export function toggleVisibility(cidString, userId) {
   return { ...file, is_public: newStatus };
 }
 
-export async function deleteFile(cidString, userId) {
+export async function deleteFile(cidString, userId, userRole = 'user') {
   const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
   const file = stmt.get(cidString);
 
   if (!file) throw new Error('File not found');
-  if (file.user_id !== userId) throw new Error('Unauthorized');
+  if (file.user_id !== userId && userRole !== 'super_admin') throw new Error('Unauthorized');
 
   // Remove from DB
   const deleteStmt = db.prepare('DELETE FROM files WHERE id = ?');
@@ -151,12 +156,12 @@ export async function deleteFile(cidString, userId) {
   return { success: true };
 }
 
-export function updateFileTags(cid, tags, userId) {
+export function updateFileTags(cid, tags, userId, userRole = 'user') {
     const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
     const file = stmt.get(cid);
   
     if (!file) throw new Error('File not found');
-    if (file.user_id !== userId) throw new Error('Unauthorized');
+    if (file.user_id !== userId && userRole !== 'super_admin') throw new Error('Unauthorized');
   
     const updateStmt = db.prepare('UPDATE files SET tags = ? WHERE id = ?');
     updateStmt.run(tags, file.id);

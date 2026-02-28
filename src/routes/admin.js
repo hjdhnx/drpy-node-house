@@ -7,8 +7,21 @@ export default async function (fastify, opts) {
     try {
       await request.jwtVerify();
       const user = request.user;
-      if (!user || user.role !== 'admin') {
+      if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
         return reply.code(403).send({ error: 'Admin access required' });
+      }
+    } catch (err) {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+  };
+
+  // Middleware to check if user is super_admin
+  const requireSuperAdmin = async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      const user = request.user;
+      if (!user || user.role !== 'super_admin') {
+        return reply.code(403).send({ error: 'Super Admin access required' });
       }
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorized' });
@@ -62,7 +75,7 @@ export default async function (fastify, opts) {
     const { id } = request.params;
     const { role, status } = request.body;
     
-    if (role && !['admin', 'user'].includes(role)) {
+    if (role && !['admin', 'user', 'super_admin'].includes(role)) {
       return reply.code(400).send({ error: 'Invalid role' });
     }
     if (status && !['active', 'pending', 'banned'].includes(status)) {
@@ -98,6 +111,50 @@ export default async function (fastify, opts) {
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Failed to update user' });
+    }
+  });
+
+  // Delete user
+  fastify.delete('/users/:id', { onRequest: [requireSuperAdmin] }, async (request, reply) => {
+    const { id } = request.params;
+
+    try {
+      // Check if user exists and prevent self-deletion
+      const userStmt = db.prepare('SELECT id, role FROM users WHERE id = ?');
+      const targetUser = userStmt.get(id);
+
+      if (!targetUser) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      if (targetUser.id === request.user.id) {
+        return reply.code(400).send({ error: 'Cannot delete yourself' });
+      }
+
+      // Delete user's files first (optional, but good practice)
+      // Note: We might want to keep files or reassign them, but deletion is requested.
+      // For now, let's just delete the user record. Files will be orphaned in DB 
+      // unless we add ON DELETE CASCADE or handle it manually.
+      // Let's manually delete files to be safe and clean.
+      
+      const filesStmt = db.prepare('SELECT cid FROM files WHERE user_id = ?');
+      const userFiles = filesStmt.all(id);
+      
+      // We should ideally call deleteFile service, but here we just delete DB records 
+      // to keep it simple as per "backend management can delete user" requirement.
+      // Real file deletion from IPFS/disk is separate.
+      // Let's just delete from DB.
+      
+      const deleteFilesStmt = db.prepare('DELETE FROM files WHERE user_id = ?');
+      deleteFilesStmt.run(id);
+
+      const deleteUserStmt = db.prepare('DELETE FROM users WHERE id = ?');
+      deleteUserStmt.run(id);
+
+      return { success: true };
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to delete user' });
     }
   });
 

@@ -157,6 +157,24 @@ createApp({
             }
         };
 
+        const deleteUser = async (id) => {
+            if (!confirm('确定要删除该用户吗？该操作不可撤销，且会删除该用户的所有文件！')) return;
+            try {
+                const res = await fetchWithAuth(`/api/admin/users/${id}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    showNotification('用户已删除');
+                    fetchUsers();
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showNotification('删除失败', 'error');
+            }
+        };
+
         const saveSettings = async () => {
             loading.value = true;
             try {
@@ -246,7 +264,7 @@ createApp({
                     }).join(''));
                     user.value = JSON.parse(jsonPayload);
                     
-                    if (user.value.role !== 'admin') {
+                    if (user.value.role !== 'admin' && user.value.role !== 'super_admin') {
                         window.location.href = '/';
                         return;
                     }
@@ -275,6 +293,7 @@ createApp({
             inviteForm,
             updateUserStatus,
             updateUserRole,
+            deleteUser,
             saveSettings,
             createInvite,
             deleteInvite,

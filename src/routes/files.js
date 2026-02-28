@@ -77,7 +77,7 @@ export default async function (fastify, opts) {
     const tag = request.query.tag || '';
 
     try {
-      return listFiles(user ? user.id : null, page, limit, search, tag);
+      return listFiles(user ? user.id : null, page, limit, search, tag, user ? user.role : 'user');
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Fetch list failed' });
@@ -169,7 +169,7 @@ export default async function (fastify, opts) {
   }, async (request, reply) => {
     const { cid } = request.params;
     try {
-      return toggleVisibility(cid, request.user.id);
+      return toggleVisibility(cid, request.user.id, request.user.role);
     } catch (err) {
       if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
       if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
@@ -184,7 +184,7 @@ export default async function (fastify, opts) {
   }, async (request, reply) => {
     const { cid } = request.params;
     try {
-      return deleteFile(cid, request.user.id);
+      return deleteFile(cid, request.user.id, request.user.role);
     } catch (err) {
       if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
       if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
@@ -216,7 +216,7 @@ export default async function (fastify, opts) {
     try {
       // Store as comma-separated string
       const tagsString = tags.join(',');
-      return updateFileTags(cid, tagsString, request.user.id);
+      return updateFileTags(cid, tagsString, request.user.id, request.user.role);
     } catch (err) {
       if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
       if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
