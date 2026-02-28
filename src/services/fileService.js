@@ -41,7 +41,7 @@ export async function uploadFile(file, userId = null, isPublic = true, maxSize =
   };
 }
 
-export function listFiles(userId = null, page = 1, limit = 10, search = '') {
+export function listFiles(userId = null, page = 1, limit = 10, search = '', tag = '') {
   // Base query condition
   // We need to handle complex logic: (is_public OR is_owner) AND (filename LIKE %search%)
   
@@ -57,6 +57,11 @@ export function listFiles(userId = null, page = 1, limit = 10, search = '') {
   if (search) {
     whereClause += ' AND filename LIKE ?';
     params.push(`%${search}%`);
+  }
+
+  if (tag) {
+    whereClause += ' AND tags LIKE ?';
+    params.push(`%${tag}%`);
   }
 
   // Count total items
@@ -143,8 +148,18 @@ export async function deleteFile(cidString, userId) {
   const deleteStmt = db.prepare('DELETE FROM files WHERE id = ?');
   deleteStmt.run(file.id);
 
-  // Note: We don't delete from IPFS/Helia immediately as it might be pinned or used by others (content addressing).
-  // In a real system, we might unpin it and let GC handle it.
-  
   return { success: true };
 }
+
+export function updateFileTags(cid, tags, userId) {
+    const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
+    const file = stmt.get(cid);
+  
+    if (!file) throw new Error('File not found');
+    if (file.user_id !== userId) throw new Error('Unauthorized');
+  
+    const updateStmt = db.prepare('UPDATE files SET tags = ? WHERE id = ?');
+    updateStmt.run(tags, file.id);
+  
+    return { ...file, tags };
+  }

@@ -14,7 +14,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        [v-cloak] { display: none; }
+        [v-cloak] { display: none !important; }
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
@@ -248,6 +248,21 @@
                         </h2>
                         
                         <div class="flex items-center space-x-3">
+                            <!-- Tag Filter -->
+                            <div class="relative group" v-if="allowedTags.length > 0">
+                                <select 
+                                    v-model="filterTag" 
+                                    @change="handleFilterTag"
+                                    class="appearance-none pl-3 pr-8 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all cursor-pointer"
+                                >
+                                    <option value="">{{ t.allTags || 'All Tags' }}</option>
+                                    <option v-for="tag in allowedTags" :key="tag" :value="tag">{{ tag }}</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                </div>
+                            </div>
+
                             <!-- Search Box -->
                             <div class="relative group">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -323,6 +338,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileSize }}</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.owner }}</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileVisibility }}</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.tags }}</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.uploadDate }}</th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)]">{{ t.actions }}</th>
                                 </tr>
@@ -364,6 +380,13 @@
                                             {{ file.is_public ? t.publicLabel : t.privateLabel }}
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-1 max-w-[150px]">
+                                            <span v-for="tag in (file.tags ? file.tags.split(',') : [])" :key="tag" class="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded border border-blue-100">
+                                                {{ tag }}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ formatDate(file.created_at) }}
                                     </td>
@@ -394,6 +417,11 @@
                                             </span>
 
                                             <template v-if="isOwner(file)">
+                                                <button @click="openTagModal(file)" class="text-blue-500 hover:text-blue-700 transition-colors" :title="t.tags">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                    </svg>
+                                                </button>
                                                 <button @click="toggleVisibility(file)" class="text-amber-500 hover:text-amber-700 transition-colors" :title="file.is_public ? t.makePrivate : t.makePublic">
                                                     <svg v-if="file.is_public" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -428,6 +456,43 @@
                 </div>
             </div>
         </main>
+
+        <!-- Tag Modal -->
+        <transition name="fade">
+            <div v-if="showTagModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-800">{{ t.editTags }}</h3>
+                        <p class="text-sm text-gray-500 mt-1">{{ currentFile?.filename }}</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex flex-wrap gap-2">
+                            <label 
+                                v-for="tag in allowedTags" 
+                                :key="tag" 
+                                class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors select-none"
+                                :class="selectedTags.includes(tag) ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+                            >
+                                <input type="checkbox" :value="tag" v-model="selectedTags" class="hidden">
+                                <span class="mr-1.5" v-if="selectedTags.includes(tag)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                {{ tag }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-50 flex justify-end space-x-3">
+                        <button @click="showTagModal = false" class="px-5 py-2.5 rounded-xl text-gray-600 font-medium hover:bg-gray-200 transition-colors">{{ t.cancel }}</button>
+                        <button @click="saveTags" :disabled="loading" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center">
+                            <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            {{ t.save }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <!-- Auth Modals -->
         <div v-if="showLogin || showRegister" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">

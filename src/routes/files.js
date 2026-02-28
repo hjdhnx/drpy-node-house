@@ -1,4 +1,4 @@
-import { uploadFile, listFiles, getFileStream, toggleVisibility, deleteFile } from '../services/fileService.js';
+import { uploadFile, listFiles, getFileStream, toggleVisibility, deleteFile, updateFileTags } from '../services/fileService.js';
 import { getUploadConfig } from '../services/authService.js';
 import path from 'path';
 
@@ -74,9 +74,10 @@ export default async function (fastify, opts) {
     const page = parseInt(request.query.page) || 1;
     const limit = parseInt(request.query.limit) || 10;
     const search = request.query.search || '';
+    const tag = request.query.tag || '';
 
     try {
-      return listFiles(user ? user.id : null, page, limit, search);
+      return listFiles(user ? user.id : null, page, limit, search, tag);
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Fetch list failed' });
@@ -184,6 +185,38 @@ export default async function (fastify, opts) {
     const { cid } = request.params;
     try {
       return deleteFile(cid, request.user.id);
+    } catch (err) {
+      if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
+      if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Operation failed' });
+    }
+  });
+
+  // Update File Tags
+  fastify.put('/:cid/tags', {
+    onRequest: [fastify.authenticate]
+  }, async (request, reply) => {
+    const { cid } = request.params;
+    const { tags } = request.body; // Expect array of strings
+
+    if (!Array.isArray(tags)) {
+        return reply.code(400).send({ error: 'Tags must be an array' });
+    }
+
+    // Validate tags against allowed list
+    const config = await getUploadConfig();
+    const allowedTags = config.allowed_tags.split(',').map(t => t.trim());
+    
+    const invalidTags = tags.filter(t => !allowedTags.includes(t));
+    if (invalidTags.length > 0) {
+        return reply.code(400).send({ error: `Invalid tags: ${invalidTags.join(', ')}` });
+    }
+
+    try {
+      // Store as comma-separated string
+      const tagsString = tags.join(',');
+      return updateFileTags(cid, tagsString, request.user.id);
     } catch (err) {
       if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
       if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });

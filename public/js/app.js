@@ -19,6 +19,7 @@ createApp({
         const itemsPerPage = ref(10);
         const totalPages = ref(1);
         const searchQuery = ref('');
+        const filterTag = ref('');
         
         const uploading = ref(false);
         const uploadStatusText = ref('');
@@ -60,6 +61,49 @@ createApp({
 
         // Upload options
         const isPublicUpload = ref(true);
+        const showTagModal = ref(false);
+        const currentFile = ref(null);
+        const selectedTags = ref([]);
+        const loading = ref(false);
+
+        const allowedTags = computed(() => {
+            if (!uploadConfig.value || !uploadConfig.value.allowed_tags) return [];
+            return uploadConfig.value.allowed_tags.split(',').map(t => t.trim());
+        });
+
+        const openTagModal = (file) => {
+            currentFile.value = file;
+            selectedTags.value = file.tags ? file.tags.split(',') : [];
+            showTagModal.value = true;
+        };
+
+        const saveTags = async () => {
+            if (!currentFile.value) return;
+            loading.value = true;
+            try {
+                const res = await fetch(`/api/files/${currentFile.value.cid}/tags`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token.value}`
+                    },
+                    body: JSON.stringify({ tags: selectedTags.value })
+                });
+
+                if (res.ok) {
+                    await fetchFiles();
+                    showTagModal.value = false;
+                } else {
+                    const data = await res.json();
+                    alert(data.error || t.value.opFailed);
+                }
+            } catch (e) {
+                console.error(e);
+                alert(t.value.opFailed);
+            } finally {
+                loading.value = false;
+            }
+        };
 
         const checkStatus = async () => {
             try {
@@ -166,7 +210,7 @@ createApp({
                 if (token.value) {
                     headers['Authorization'] = `Bearer ${token.value}`;
                 }
-                const res = await fetch(`/api/files/list?page=${currentPage.value}&limit=${itemsPerPage.value}&search=${encodeURIComponent(searchQuery.value)}`, { headers });
+                const res = await fetch(`/api/files/list?page=${currentPage.value}&limit=${itemsPerPage.value}&search=${encodeURIComponent(searchQuery.value)}&tag=${encodeURIComponent(filterTag.value)}`, { headers });
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data)) {
@@ -199,6 +243,11 @@ createApp({
         };
 
         const handleSearch = () => {
+            currentPage.value = 1;
+            fetchFiles();
+        };
+
+        const handleFilterTag = () => {
             currentPage.value = 1;
             fetchFiles();
         };
@@ -470,8 +519,10 @@ createApp({
             changePage,
             changeItemsPerPage,
             handleSearch,
+            handleFilterTag,
             clearSearch,
             searchQuery,
+            filterTag,
             totalItems,
             currentPage,
             itemsPerPage,
@@ -480,7 +531,14 @@ createApp({
             registrationPolicy,
             canUpload,
             canPreview,
-            canDownload
+            canDownload,
+            showTagModal,
+            currentFile,
+            selectedTags,
+            allowedTags,
+            openTagModal,
+            saveTags,
+            loading
         };
     }
 }).mount('#app');

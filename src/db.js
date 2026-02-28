@@ -71,6 +71,10 @@ try {
   db.run('ALTER TABLE files ADD COLUMN is_public INTEGER DEFAULT 1');
 } catch (e) {}
 
+try {
+  db.run('ALTER TABLE files ADD COLUMN tags TEXT');
+} catch (e) {}
+
 // Migrate Users table
 try {
   db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
@@ -89,6 +93,7 @@ const defaultSettings = {
   registration_policy: 'open', // open, closed, approval, invite
   allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
   max_file_size: '102400', // 100KB in bytes
+  allowed_tags: 'ds,dr2,cat,php,hipy',
   anonymous_upload: 'false',
   anonymous_preview: 'false',
   anonymous_download: 'false'

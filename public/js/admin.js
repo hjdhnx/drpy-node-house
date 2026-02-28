@@ -16,6 +16,7 @@ createApp({
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
             max_file_size: 102400,
+            allowed_tags: 'ds,dr2,cat,php,hipy',
             anonymous_upload: 'false',
             anonymous_preview: 'false',
             anonymous_download: 'false'
