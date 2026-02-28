@@ -1,0 +1,156 @@
+import { uploadFile, listFiles, getFileStream, toggleVisibility, deleteFile } from '../services/fileService.js';
+
+export default async function (fastify, opts) {
+  
+  // Upload file
+  fastify.post('/upload', async (request, reply) => {
+    // Check auth (optional, but needed for tracking user)
+    let user = null;
+    try {
+      await request.jwtVerify();
+      user = request.user;
+    } catch (e) {
+      // Anonymous upload allowed
+    }
+
+    const data = await request.file();
+    
+    if (!data) {
+      return reply.code(400).send({ error: 'No file uploaded' });
+    }
+
+    const isPublic = request.query.is_public !== 'false'; // Default true
+    
+    if (!isPublic && !user) {
+      return reply.code(401).send({ error: 'You must be logged in to upload private files' });
+    }
+
+    try {
+      const result = await uploadFile(data, user ? user.id : null, isPublic);
+      return result;
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Upload failed' });
+    }
+  });
+
+  // List files
+  fastify.get('/list', async (request, reply) => {
+    let user = null;
+    try {
+      await request.jwtVerify();
+      user = request.user;
+    } catch (e) {
+      // Ignore auth error, treat as guest
+    }
+
+    const page = parseInt(request.query.page) || 1;
+    const limit = parseInt(request.query.limit) || 10;
+    const search = request.query.search || '';
+
+    try {
+      return listFiles(user ? user.id : null, page, limit, search);
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Fetch list failed' });
+    }
+  });
+
+  // Download/Preview file
+  // Supports ?preview=true to set Content-Disposition: inline
+  fastify.get('/download/:cid', async (request, reply) => {
+    const { cid } = request.params;
+    const isPreview = request.query.preview === 'true';
+    
+    let user = null;
+    try {
+      if (request.query.token) {
+        user = await fastify.jwt.verify(request.query.token);
+      } else {
+        await request.jwtVerify();
+        user = request.user;
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    try {
+      const { stream, filename, mimetype } = await getFileStream(cid, user ? user.id : null);
+      
+      const encodedFilename = encodeURIComponent(filename);
+      const dispositionType = isPreview ? 'inline' : 'attachment';
+      
+      reply.header('Content-Disposition', `${dispositionType}; filename*=UTF-8''${encodedFilename}`);
+      
+      // Ensure UTF-8 charset for text files to prevent garbled Chinese characters in browser preview
+      let contentType = mimetype;
+      
+      // Force text/plain for code files that browser might try to download or execute
+      // .py (text/x-python, application/x-python-code), .php (application/x-httpd-php, text/x-php)
+      // Also handle common code extensions if mimetype detection is generic
+      const textExtensions = ['.py', '.php', '.js', '.ts', '.c', '.cpp', '.h', '.java', '.rb', '.go', '.rs', '.sh', '.bat', '.cmd', '.ps1', '.sql', '.xml', '.yaml', '.yml', '.json', '.md', '.log', '.ini', '.conf'];
+      const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
+      
+      if (isPreview) {
+        if (textExtensions.includes(ext) || mimetype.startsWith('text/') || mimetype === 'application/json' || mimetype === 'application/javascript') {
+          // Force text/plain for code files to ensure they display in browser instead of downloading
+          // exception: keep html/xml/json as is if preferred, but for safety/viewing text/plain is safest for code
+          if (!mimetype.includes('html')) { // Let HTML render? Or force text? User asked for "preview" usually implies seeing source for code.
+             // For .py/.php specifically asked:
+             if (['.py', '.php'].includes(ext)) {
+               contentType = 'text/plain; charset=utf-8';
+             } else if (!contentType.includes('charset=')) {
+               contentType += '; charset=utf-8';
+             }
+          } else {
+             if (!contentType.includes('charset=')) {
+               contentType += '; charset=utf-8';
+             }
+          }
+        }
+      }
+      reply.header('Content-Type', contentType);
+      
+      const { Readable } = await import('stream');
+      const readable = Readable.from(stream);
+      
+      return reply.send(readable);
+    } catch (err) {
+      if (err.message === 'Unauthorized access to private file') {
+        return reply.code(403).send({ error: 'Unauthorized access to private file' });
+      }
+      request.log.error(err);
+      return reply.code(404).send({ error: 'File not found or retrieval failed' });
+    }
+  });
+
+  // Toggle Visibility
+  fastify.post('/:cid/toggle-visibility', {
+    onRequest: [fastify.authenticate]
+  }, async (request, reply) => {
+    const { cid } = request.params;
+    try {
+      return toggleVisibility(cid, request.user.id);
+    } catch (err) {
+      if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
+      if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Operation failed' });
+    }
+  });
+
+  // Delete File
+  fastify.delete('/:cid', {
+    onRequest: [fastify.authenticate]
+  }, async (request, reply) => {
+    const { cid } = request.params;
+    try {
+      return deleteFile(cid, request.user.id);
+    } catch (err) {
+      if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
+      if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Operation failed' });
+    }
+  });
+}

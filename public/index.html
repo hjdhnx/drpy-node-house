@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>去中心化文件存储</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        [v-cloak] { display: none; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* PC Fixed Layout */
+        @media (min-width: 1024px) {
+            body, html {
+                height: 100%;
+                overflow: hidden;
+            }
+            #app {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                padding-bottom: 0;
+            }
+            main {
+                flex: 1;
+                min-height: 0; /* Important for flex child scroll */
+                display: grid;
+                grid-template-columns: repeat(12, minmax(0, 1fr));
+                grid-template-rows: minmax(0, 1fr); /* Force row to fill height */
+                gap: 2rem;
+            }
+            .scrollable-column {
+                height: 100%;
+                overflow-y: auto;
+                padding-right: 4px; /* Space for scrollbar */
+            }
+            .file-list-container {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            .file-list-header {
+                flex-shrink: 0;
+            }
+            .file-list-body {
+                flex: 1;
+                overflow-y: auto;
+                min-height: 0;
+            }
+            /* Custom scrollbar */
+            ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 3px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen bg-[url('https://grainy-gradients.vercel.app/noise.svg')]">
+    <div id="app" v-cloak class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Navbar -->
+        <nav class="glass-panel rounded-2xl shadow-sm p-4 mb-8 flex justify-between items-center sticky top-4 z-40">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
+                    DS
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">{{ t.title }}</h1>
+                    <p class="text-xs text-gray-500 font-medium">{{ t.subtitle }}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors">
+                    {{ lang === 'zh' ? 'EN' : '中文' }}
+                </button>
+                
+                <div class="h-6 w-px bg-gray-200"></div>
+
+                <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full" :class="status === 'ok' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'"></span>
+                    <span class="text-gray-600">{{ status === 'ok' ? 'Online' : 'Offline' }}</span>
+                </div>
+
+                <template v-if="user">
+                    <div class="flex items-center space-x-3 pl-2">
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-semibold text-gray-700">{{ user.username }}</span>
+                            <span class="text-xs text-green-600 bg-green-50 px-1.5 rounded">Verified</span>
+                        </div>
+                        <button @click="logout" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="flex items-center space-x-2">
+                        <button @click="showLogin = true; showRegister = false" class="text-gray-600 hover:text-blue-600 font-medium text-sm px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                            {{ t.login }}
+                        </button>
+                        <button @click="showRegister = true; showLogin = false" class="bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg shadow-gray-900/20 transition-all hover:scale-105">
+                            {{ t.register }}
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </nav>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Upload Sidebar -->
+            <div class="lg:col-span-4 space-y-6 lg:overflow-y-auto lg:pr-2 lg:h-full scrollable-column">
+                <div class="glass-panel rounded-2xl shadow-sm p-6 card-hover">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            {{ t.uploadTitle }}
+                        </h2>
+                        <div v-if="user" class="relative">
+                            <select v-model="isPublicUpload" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pr-8 cursor-pointer hover:bg-gray-100 transition-colors">
+                                <option :value="true">🌐 {{ t.public }}</option>
+                                <option :value="false">🔒 {{ t.private }}</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div 
+                        class="relative group border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300"
+                        @dragover.prevent
+                        @drop.prevent="handleDrop"
+                        @click="$refs.fileInput.click()"
+                :class="{'border-blue-500 bg-blue-50': uploading}"
+            >
+                <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect" multiple>
+                
+                <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl transition-opacity duration-300" v-if="uploading">
+                     <svg class="animate-spin h-10 w-10 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-blue-600 font-medium animate-pulse">{{ uploadStatusText }}</p>
+                </div>
+
+                        <div class="group-hover:scale-105 transition-transform duration-300">
+                            <div class="w-16 h-16 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                            </div>
+                            <p class="text-gray-700 font-medium mb-1">{{ t.clickToUpload }}</p>
+                            <p class="text-gray-400 text-xs">{{ t.anyFileType }}</p>
+                        </div>
+                    </div>
+                    
+                    <p v-if="!user" class="text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs mt-4 flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ t.anonymousTip }}
+                    </p>
+                </div>
+                
+                <!-- Stats / Info Card (Optional placeholder for future) -->
+                <div class="glass-panel rounded-2xl shadow-sm p-6">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Storage Info</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-xl">
+                            <div class="text-2xl font-bold text-gray-800">{{ files.length }}</div>
+                            <div class="text-xs text-gray-500">Total Files</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl">
+                            <div class="text-2xl font-bold text-gray-800">{{ formatSize(files.reduce((acc, f) => acc + f.size, 0)) }}</div>
+                            <div class="text-xs text-gray-500">Total Size</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div class="lg:col-span-8 lg:h-full lg:overflow-hidden">
+                <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white/50 file-list-header flex-shrink-0">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            {{ t.filesTitle }}
+                        </h2>
+                        
+                        <div class="flex items-center space-x-3">
+                            <!-- Search Box -->
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    v-model="searchQuery" 
+                                    @keyup.enter="handleSearch"
+                                    type="text" 
+                                    :placeholder="t.searchPlaceholder" 
+                                    class="pl-9 pr-8 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white w-32 sm:w-48 transition-all"
+                                >
+                                <button 
+                                    v-if="searchQuery" 
+                                    @click="clearSearch"
+                                    class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Pagination Controls (Top) -->
+                            <div class="flex items-center space-x-2 text-sm text-gray-600 mr-2" v-if="totalPages > 1 || totalItems > 0">
+                                <select v-model="itemsPerPage" @change="changeItemsPerPage" class="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1 px-2">
+                                    <option :value="10">10</option>
+                                    <option :value="20">20</option>
+                                    <option :value="30">30</option>
+                                    <option :value="50">50</option>
+                                    <option :value="100">100</option>
+                                </select>
+                                <span class="text-xs hidden sm:inline-block">{{ currentPage }} / {{ totalPages }}</span>
+                                <div class="flex items-center space-x-1">
+                                    <button 
+                                        @click="changePage(currentPage - 1)" 
+                                        :disabled="currentPage === 1"
+                                        class="p-1 rounded-md bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        :title="t.previous"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="changePage(currentPage + 1)" 
+                                        :disabled="currentPage === totalPages"
+                                        class="p-1 rounded-md bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        :title="t.next"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button @click="fetchFiles" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" :title="t.refresh">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 file-list-body relative overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-100 relative">
+                            <thead class="bg-gray-50/95 sticky top-0 z-20 backdrop-blur-sm shadow-sm">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileName }}</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileSize }}</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.owner }}</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileVisibility }}</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.uploadDate }}</th>
+                                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)]">{{ t.actions }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white/30">
+                                <tr v-for="file in files" :key="file.id" class="hover:bg-blue-50/30 transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 max-w-[200px] truncate" :title="file.filename">{{ file.filename }}</div>
+                                                <div class="text-xs text-gray-400 font-mono mt-0.5 flex items-center cursor-pointer hover:text-blue-500" @click="copyToClipboard(file.cid)" :title="t.copyCID">
+                                                    {{ truncate(file.cid, 12) }}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        {{ formatSize(file.size) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="h-6 w-6 rounded-full bg-gradient-to-r from-pink-400 to-red-400 flex items-center justify-center text-white text-xs font-bold">
+                                                {{ (file.username || 'A')[0].toUpperCase() }}
+                                            </div>
+                                            <span class="text-sm text-gray-600">{{ file.username || t.anonymous }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span :class="file.is_public ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'" class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full border">
+                                            {{ file.is_public ? t.publicLabel : t.privateLabel }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ formatDate(file.created_at) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/90 backdrop-blur-sm shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)] z-10 group-hover:bg-blue-50/90 transition-colors">
+                                        <div class="flex items-center justify-end space-x-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                            <a :href="getDownloadUrl(file.cid, true)" target="_blank" class="text-teal-600 hover:text-teal-800 transition-colors" :title="t.preview">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </a>
+                                            <a :href="getDownloadUrl(file.cid)" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors" :title="t.download">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4 4m4-4v12" />
+                                                </svg>
+                                            </a>
+                                            <template v-if="isOwner(file)">
+                                                <button @click="toggleVisibility(file)" class="text-amber-500 hover:text-amber-700 transition-colors" :title="file.is_public ? t.makePrivate : t.makePublic">
+                                                    <svg v-if="file.is_public" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    </svg>
+                                                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                    </svg>
+                                                </button>
+                                                <button @click="deleteFile(file)" class="text-red-500 hover:text-red-700 transition-colors" :title="t.delete">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-if="files.length === 0">
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                            </svg>
+                                            <p>{{ t.noFiles }}</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                </div>
+            </div>
+        </main>
+
+        <!-- Auth Modals -->
+        <div v-if="showLogin || showRegister" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all scale-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+                
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">{{ showLogin ? t.loginTitle : t.registerTitle }}</h2>
+                
+                <form @submit.prevent="showLogin ? login() : register()" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.username }}</label>
+                        <input v-model="authForm.username" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.password }}</label>
+                        <input v-model="authForm.password" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
+                    </div>
+                    
+                    <div v-if="authError" class="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        {{ authError }}
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" @click="showLogin = false; showRegister = false" class="px-5 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 font-medium transition-colors">
+                            {{ t.cancel }}
+                        </button>
+                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all">
+                            {{ t.submit }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>
