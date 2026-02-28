@@ -64,8 +64,8 @@ fastify.get('/api/status', async (request, reply) => {
 // Start server
 const start = async () => {
   try {
-    await fastify.listen({ port: config.port, host: config.host });
-    console.log(`Server running at http://${config.host}:${config.port}`);
+    const address = await fastify.listen({ port: config.port, host: config.host });
+    console.log(`Server running at ${address}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

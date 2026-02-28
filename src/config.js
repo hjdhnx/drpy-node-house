@@ -6,8 +6,8 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 export default {
-  port: process.env.PORT || 3000,
-  host: '0.0.0.0',
+  port: process.env.PORT || 5678,
+  host: '::',
   paths: {
     root: rootDir,
     storage: path.join(rootDir, 'storage'), // IPFS blockstore/datastore location
