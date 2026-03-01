@@ -59,7 +59,12 @@ export const zh = {
     tags: '标签',
     editTags: '编辑标签',
     save: '保存',
-    allTags: '所有标签'
+    allTags: '所有标签',
+    changePassword: '修改密码',
+    changePasswordTitle: '修改用户密码',
+    oldPassword: '旧密码',
+    newPassword: '新密码',
+    passwordChanged: '密码修改成功'
 };
 
 export const en = {
@@ -123,5 +128,10 @@ export const en = {
     tags: 'Tags',
     editTags: 'Edit Tags',
     save: 'Save',
-    allTags: 'All Tags'
+    allTags: 'All Tags',
+    changePassword: 'Change Password',
+    changePasswordTitle: 'Change Password',
+    oldPassword: 'Old Password',
+    newPassword: 'New Password',
+    passwordChanged: 'Password changed successfully'
 };

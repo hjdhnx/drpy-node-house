@@ -1,4 +1,4 @@
-import { registerUser, loginUser, getRegistrationPolicy, getUploadConfig } from '../services/authService.js';
+import { registerUser, loginUser, changePassword, getRegistrationPolicy, getUploadConfig } from '../services/authService.js';
 
 export default async function (fastify, opts) {
 
@@ -64,5 +64,26 @@ export default async function (fastify, opts) {
     onRequest: [fastify.authenticate]
   }, async (request, reply) => {
     return request.user;
+  });
+
+  fastify.post('/change-password', {
+    onRequest: [fastify.authenticate]
+  }, async (request, reply) => {
+    const { oldPassword, newPassword } = request.body;
+
+    if (!oldPassword || !newPassword) {
+      return reply.code(400).send({ error: 'Old and new passwords are required' });
+    }
+
+    try {
+      await changePassword(request.user.id, oldPassword, newPassword);
+      return { success: true, message: 'Password changed successfully' };
+    } catch (err) {
+      if (err.message === 'Incorrect old password') {
+        return reply.code(401).send({ error: err.message });
+      }
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to change password' });
+    }
   });
 }

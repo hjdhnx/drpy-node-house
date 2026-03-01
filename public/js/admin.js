@@ -175,6 +175,31 @@ createApp({
             }
         };
 
+        const resetUserPassword = async (id, username) => {
+            const newPassword = prompt(`请输入用户 ${username} 的新密码:`);
+            if (newPassword === null) return; // Cancelled
+            if (!newPassword.trim()) {
+                showNotification('密码不能为空', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetchWithAuth(`/api/admin/users/${id}/reset-password`, {
+                    method: 'POST',
+                    body: JSON.stringify({ password: newPassword })
+                });
+                
+                if (res.ok) {
+                    showNotification('密码重置成功');
+                } else {
+                    const data = await res.json();
+                    showNotification(data.error || '重置失败', 'error');
+                }
+            } catch (e) {
+                showNotification('重置失败: ' + e.message, 'error');
+            }
+        };
+
         const saveSettings = async () => {
             loading.value = true;
             try {
@@ -294,6 +319,7 @@ createApp({
             updateUserStatus,
             updateUserRole,
             deleteUser,
+            resetUserPassword,
             saveSettings,
             createInvite,
             deleteInvite,

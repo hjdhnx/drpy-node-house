@@ -66,6 +66,10 @@ createApp({
         const selectedTags = ref([]);
         const loading = ref(false);
 
+        // Change Password
+        const showChangePasswordModal = ref(false);
+        const changePasswordForm = ref({ oldPassword: '', newPassword: '' });
+
         // Device detection
         const isAndroid = /Android/i.test(navigator.userAgent);
         
@@ -101,6 +105,34 @@ createApp({
                 if (res.ok) {
                     await fetchFiles();
                     showTagModal.value = false;
+                } else {
+                    const data = await res.json();
+                    alert(data.error || t.value.opFailed);
+                }
+            } catch (e) {
+                console.error(e);
+                alert(t.value.opFailed);
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const changePassword = async () => {
+            loading.value = true;
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token.value}`
+                    },
+                    body: JSON.stringify(changePasswordForm.value)
+                });
+
+                if (res.ok) {
+                    alert(t.value.passwordChanged);
+                    showChangePasswordModal.value = false;
+                    changePasswordForm.value = { oldPassword: '', newPassword: '' };
                 } else {
                     const data = await res.json();
                     alert(data.error || t.value.opFailed);
@@ -553,7 +585,10 @@ createApp({
             openTagModal,
             saveTags,
             loading,
-            fileInputAccept
+            fileInputAccept,
+            showChangePasswordModal,
+            changePasswordForm,
+            changePassword
         };
     }
 }).mount('#app');

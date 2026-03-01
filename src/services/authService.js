@@ -109,3 +109,37 @@ export async function loginUser(username, password) {
 
   return { id: user.id, username: user.username, role: user.role };
 }
+
+export async function changePassword(userId, oldPassword, newPassword) {
+  const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+  const user = stmt.get(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (!(await bcrypt.compare(oldPassword, user.password))) {
+    throw new Error('Incorrect old password');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const updateStmt = db.prepare('UPDATE users SET password = ? WHERE id = ?');
+  updateStmt.run(hashedPassword, userId);
+
+  return { success: true };
+}
+
+export async function resetPassword(userId, newPassword) {
+  const stmt = db.prepare('SELECT id FROM users WHERE id = ?');
+  const user = stmt.get(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const updateStmt = db.prepare('UPDATE users SET password = ? WHERE id = ?');
+  updateStmt.run(hashedPassword, userId);
+
+  return { success: true };
+}

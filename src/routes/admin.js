@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { resetPassword } from '../services/authService.js';
 
 export default async function (fastify, opts) {
   
@@ -155,6 +156,24 @@ export default async function (fastify, opts) {
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Failed to delete user' });
+    }
+  });
+
+  // Reset user password (Admin)
+  fastify.post('/users/:id/reset-password', { onRequest: [requireAdmin] }, async (request, reply) => {
+    const { id } = request.params;
+    const { password } = request.body;
+
+    if (!password) {
+      return reply.code(400).send({ error: 'New password is required' });
+    }
+
+    try {
+      await resetPassword(id, password);
+      return { success: true, message: 'Password reset successfully' };
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to reset password' });
     }
   });
 
