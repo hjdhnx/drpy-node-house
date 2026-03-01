@@ -178,7 +178,7 @@
                         @click="$refs.fileInput.click()"
                 :class="{'border-blue-500 bg-blue-50': uploading}"
             >
-                <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect" multiple :accept="uploadConfig?.allowed_extensions">
+                <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect" multiple :accept="fileInputAccept">
                 
                 <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl transition-opacity duration-300" v-if="uploading">
                      <svg class="animate-spin h-10 w-10 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

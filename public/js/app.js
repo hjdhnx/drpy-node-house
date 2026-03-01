@@ -66,6 +66,14 @@ createApp({
         const selectedTags = ref([]);
         const loading = ref(false);
 
+        // Device detection
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        const fileInputAccept = computed(() => {
+            if (isAndroid) return ''; // Disable accept on Android to fix file picker
+            return uploadConfig.value?.allowed_extensions || '';
+        });
+
         const allowedTags = computed(() => {
             if (!uploadConfig.value || !uploadConfig.value.allowed_tags) return [];
             return uploadConfig.value.allowed_tags.split(',').map(t => t.trim());
@@ -331,22 +339,27 @@ createApp({
             
             const allowed = uploadConfig.value.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
             const maxSize = uploadConfig.value.max_file_size;
+            
+            const validFiles = [];
+            const errors = [];
 
-            const validFiles = files.filter(file => {
+            for (const file of files) {
                 const ext = '.' + file.name.split('.').pop().toLowerCase();
                 const isExtValid = allowed.includes(ext);
                 const isSizeValid = file.size <= maxSize;
                 
                 if (!isExtValid) {
-                    uploadStatusText.value = `Error: ${file.name} type not allowed`;
-                    setTimeout(() => uploadStatusText.value = '', 3000);
+                    errors.push(`文件类型不允许: ${file.name}`);
                 } else if (!isSizeValid) {
-                    uploadStatusText.value = `Error: ${file.name} too large`;
-                    setTimeout(() => uploadStatusText.value = '', 3000);
+                    errors.push(`文件过大: ${file.name} (最大限制: ${formatSize(maxSize)})`);
+                } else {
+                    validFiles.push(file);
                 }
+            }
 
-                return isExtValid && isSizeValid;
-            });
+            if (errors.length > 0) {
+                alert(errors.join('\n'));
+            }
 
             if (validFiles.length > 0) {
                 uploadFiles(validFiles);
@@ -539,7 +552,8 @@ createApp({
             allowedTags,
             openTagModal,
             saveTags,
-            loading
+            loading,
+            fileInputAccept
         };
     }
 }).mount('#app');
