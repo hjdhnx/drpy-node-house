@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 export async function initSuperAdmin() {
   const stmt = db.prepare('SELECT count(*) as count FROM users');
   const result = stmt.get();
-  
+
   if (result.count === 0) {
     console.log('No users found. Creating default super admin...');
     const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -24,11 +24,11 @@ export async function getRegistrationPolicy() {
 export async function getUploadConfig() {
   const stmt = db.prepare("SELECT key, value FROM settings");
   const results = stmt.all();
-  
+
   const config = {
     allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
     max_file_size: 204800,
-    allowed_tags: 'ds,dr2,cat,php,hipy',
+    allowed_tags: 'ds,dr2,cat,php,hipy,优,失效',
     anonymous_upload: 'false',
     anonymous_preview: 'false',
     anonymous_download: 'false',
@@ -62,11 +62,11 @@ export async function registerUser(username, password, inviteCode = null, reason
     }
     const inviteStmt = db.prepare('SELECT * FROM invites WHERE code = ? AND (max_uses = 0 OR used_count < max_uses) AND (expires_at IS NULL OR expires_at > ?)');
     const invite = inviteStmt.get(inviteCode, Math.floor(Date.now() / 1000));
-    
+
     if (!invite) {
       throw new Error('Invalid or expired invitation code');
     }
-    
+
     // Increment used count
     db.prepare('UPDATE invites SET used_count = used_count + 1 WHERE code = ?').run(inviteCode);
   }
@@ -87,7 +87,7 @@ export async function registerUser(username, password, inviteCode = null, reason
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const stmt = db.prepare('INSERT INTO users (username, password, role, status, reason) VALUES (?, ?, ?, ?, ?)');
-  
+
   // Default role is 'user'
   const info = stmt.run(username, hashedPassword, 'user', initialStatus, reason);
   return { id: info.lastInsertRowid, username, role: 'user', status: initialStatus };
@@ -100,11 +100,11 @@ export async function loginUser(username, password) {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new Error('Invalid username or password');
   }
-  
+
   if (user.status === 'banned') {
     throw new Error('Account is banned');
   }
-  
+
   // Pending users can login, but will have restricted access
   // if (user.status === 'pending') {
   //   throw new Error('Account is pending approval');

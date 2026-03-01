@@ -477,6 +477,9 @@
                             </div>
                             <!-- Fixed Footer -->
                             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur border-t border-gray-200 flex justify-end z-10">
+                                <button @click="resetSettings" :disabled="loading" class="mr-4 text-red-600 bg-red-50 hover:bg-red-100 font-medium px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                                    {{ t.resetDefaults }}
+                                </button>
                                 <button @click="saveSettings" :disabled="loading" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-medium">
                                     <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

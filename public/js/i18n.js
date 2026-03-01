@@ -148,7 +148,12 @@ export const zh = {
     resetPassword: '重置密码',
     setAdmin: '设为管理员',
     deleteUser: '删除用户',
-    manageSystem: '管理您的去中心化存储系统'
+    manageSystem: '管理您的去中心化存储系统',
+    resetDefaults: '恢复出厂设置',
+    resetConfirm1: '确定要恢复出厂设置吗？这将覆盖所有当前设置！',
+    resetConfirm2: '请再次确认：此操作不可撤销，确定要继续吗？',
+    resetSuccess: '已恢复默认设置',
+    resetFailed: '恢复失败'
 };
 
 export const en = {
@@ -302,5 +307,10 @@ export const en = {
     setAdmin: 'Set as Admin',
     deleteUser: 'Delete User',
     manageSystem: 'Manage your decentralized storage system',
-    setLimits: 'Set usage limits for the invite code'
+    setLimits: 'Set usage limits for the invite code',
+    resetDefaults: 'Reset Defaults',
+    resetConfirm1: 'Are you sure you want to reset to default settings? This will overwrite all current settings!',
+    resetConfirm2: 'Please confirm again: This operation cannot be undone. Are you sure?',
+    resetSuccess: 'Settings reset to defaults',
+    resetFailed: 'Reset failed'
 };

@@ -279,6 +279,49 @@ createApp({
             }
         };
 
+        const resetSettings = async () => {
+            if (!confirm(t.value.resetConfirm1)) return;
+            if (!confirm(t.value.resetConfirm2)) return;
+
+            loading.value = true;
+            try {
+                const res = await fetchWithAuth('/api/admin/settings/reset', {
+                    method: 'POST',
+                    body: JSON.stringify({}) // Send empty body to satisfy content-type: application/json check
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.settings) {
+                        const newSettings = data.settings;
+                        if (newSettings.max_file_size) newSettings.max_file_size = parseInt(newSettings.max_file_size);
+                        
+                        // Ensure notification_templates is formatted string
+                        if (newSettings.notification_templates && typeof newSettings.notification_templates !== 'string') {
+                             newSettings.notification_templates = JSON.stringify(newSettings.notification_templates, null, 2);
+                        } else if (typeof newSettings.notification_templates === 'string') {
+                            try {
+                                const parsed = JSON.parse(newSettings.notification_templates);
+                                newSettings.notification_templates = JSON.stringify(parsed, null, 2);
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        settings.value = { ...settings.value, ...newSettings };
+                    } else {
+                        fetchSettings();
+                    }
+                    showNotification(t.value.resetSuccess);
+                } else {
+                    showNotification(t.value.resetFailed, 'error');
+                }
+            } catch (e) {
+                showNotification(t.value.resetFailed + ': ' + e.message, 'error');
+            } finally {
+                loading.value = false;
+            }
+        };
+
         const createInvite = async () => {
             loading.value = true;
             try {
@@ -379,6 +422,7 @@ createApp({
             deleteUser,
             resetUserPassword,
             saveSettings,
+            resetSettings,
             createInvite,
             deleteInvite,
             formatDate,
