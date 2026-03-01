@@ -27,7 +27,7 @@ export async function getUploadConfig() {
   
   const config = {
     allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-    max_file_size: 102400,
+    max_file_size: 204800,
     allowed_tags: 'ds,dr2,cat,php,hipy',
     anonymous_upload: 'false',
     anonymous_preview: 'false',

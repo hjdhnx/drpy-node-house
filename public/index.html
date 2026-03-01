@@ -100,7 +100,10 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 tracking-tight">{{ t.title }}</h1>
-                    <p class="text-xs text-gray-500 font-medium">{{ t.subtitle }}</p>
+                    <div class="flex items-center space-x-2">
+                        <p class="text-xs text-gray-500 font-medium">{{ t.subtitle }}</p>
+                        <span v-if="version" class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-md font-mono">v{{ version }}</span>
+                    </div>
                 </div>
             </div>
             

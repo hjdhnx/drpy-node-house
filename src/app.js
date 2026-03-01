@@ -11,6 +11,9 @@ import fastifyJwt from '@fastify/jwt';
 import fileRoutes from './routes/files.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
+import { readFileSync } from 'fs';
+
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
 
 const fastify = Fastify({
   logger: true
@@ -58,7 +61,7 @@ fastify.addHook('onReady', async () => {
 
 // API Routes (Placeholder for now)
 fastify.get('/api/status', async (request, reply) => {
-  return { status: 'ok', timestamp: Date.now() };
+  return { status: 'ok', timestamp: Date.now(), version: packageJson.version };
 });
 
 // Start server

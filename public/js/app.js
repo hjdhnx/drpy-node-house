@@ -13,6 +13,7 @@ createApp({
         };
 
         const status = ref('Checking...');
+        const version = ref('');
         const files = ref([]);
         const totalItems = ref(0);
         const currentPage = ref(1);
@@ -35,7 +36,7 @@ createApp({
         const registrationPolicy = ref('open');
         const uploadConfig = ref({
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-            max_file_size: 102400,
+            max_file_size: 204800,
             anonymous_upload: 'false',
             anonymous_preview: 'false',
             anonymous_download: 'false'
@@ -150,6 +151,7 @@ createApp({
                 const res = await fetch('/api/status');
                 const data = await res.json();
                 status.value = data.status;
+                if (data.version) version.value = data.version;
             } catch (e) {
                 status.value = 'offline';
             }
@@ -538,6 +540,7 @@ createApp({
             t,
             toggleLang,
             status,
+            version,
             files,
             uploading,
             uploadStatusText,

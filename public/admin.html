@@ -75,7 +75,10 @@
         <aside class="w-64 glass-sidebar border-r border-gray-800 flex flex-col z-20 shadow-xl transition-all duration-300">
             <div class="p-6 border-b border-gray-700/50 flex items-center space-x-3">
                 <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">DS</div>
-                <h1 class="text-lg font-bold text-white tracking-wide">Admin Panel</h1>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-wide">Admin Panel</h1>
+                    <span v-if="version" class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-md font-mono block w-fit mt-1">v{{ version }}</span>
+                </div>
             </div>
             
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">

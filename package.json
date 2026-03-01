@@ -1,6 +1,6 @@
 {
   "name": "decentralized-file-storage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A decentralized file storage system using Bun, Fastify, and Helia (IPFS).",
   "main": "src/app.js",
   "type": "module",
@@ -14,6 +14,7 @@
     "pm2:delete": "pm2 delete drpysh",
     "pm2:logs": "pm2 logs drpysh",
     "reset-password": "bun scripts/manage_roles.js reset-password",
+    "settings": "bun scripts/manage_settings.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

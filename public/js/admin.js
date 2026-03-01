@@ -3,6 +3,7 @@ import { createApp, ref, onMounted, watch } from 'vue';
 createApp({
     setup() {
         const user = ref(null);
+        const version = ref('');
         const token = ref(localStorage.getItem('token') || null);
         const currentView = ref('users');
         const users = ref([]);
@@ -15,7 +16,7 @@ createApp({
         const settings = ref({ 
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-            max_file_size: 102400,
+            max_file_size: 204800,
             allowed_tags: 'ds,dr2,cat,php,hipy',
             anonymous_upload: 'false',
             anonymous_preview: 'false',
@@ -40,6 +41,16 @@ createApp({
         const showNotification = (msg, type = 'success') => {
             notification.value = { show: true, message: msg, type };
             setTimeout(() => notification.value.show = false, 3000);
+        };
+
+        const fetchSystemStatus = async () => {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                if (data.version) version.value = data.version;
+            } catch (e) {
+                console.error('Failed to fetch system status', e);
+            }
         };
 
         const fetchWithAuth = async (url, options = {}) => {
@@ -304,10 +315,12 @@ createApp({
 
             // Initial fetch based on current view
             fetchUsers();
+            fetchSystemStatus();
         });
 
         return {
             user,
+            version,
             currentView,
             users,
             settings,

@@ -92,7 +92,7 @@ try {
 const defaultSettings = {
   registration_policy: 'open', // open, closed, approval, invite
   allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-  max_file_size: '102400', // 100KB in bytes
+  max_file_size: '204800', // 200KB in bytes
   allowed_tags: 'ds,dr2,cat,php,hipy',
   anonymous_upload: 'false',
   anonymous_preview: 'false',
