@@ -95,9 +95,14 @@ createApp({
             }
             const headers = {
                 ...options.headers,
-                'Authorization': `Bearer ${token.value}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token.value}`
             };
+
+            // Only set Content-Type to application/json if there is a body
+            // This prevents FST_ERR_CTP_EMPTY_JSON_BODY error on DELETE/GET requests
+            if (options.body && !headers['Content-Type']) {
+                headers['Content-Type'] = 'application/json';
+            }
             const res = await fetch(url, { ...options, headers });
             if (res.status === 401 || res.status === 403) {
                 throw new Error('Unauthorized');
