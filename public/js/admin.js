@@ -30,7 +30,7 @@ createApp({
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
             max_file_size: 204800,
-            allowed_tags: 'ds,dr2,cat,php,hipy',
+            allowed_tags: 'ds,dr2,cat,php,hipy,优,失效',
             anonymous_upload: 'false',
             anonymous_preview: 'false',
             anonymous_download: 'false',
@@ -420,24 +420,26 @@ createApp({
         });
 
         onMounted(async () => {
-            if (token.value) {
-                try {
-                    const base64Url = token.value.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    user.value = JSON.parse(jsonPayload);
-                    
-                    if (user.value.role !== 'admin' && user.value.role !== 'super_admin') {
-                        window.location.href = '/';
-                        return;
-                    }
-                } catch (e) {
+            if (!token.value) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                // Fetch fresh user data from API instead of trusting stale token payload
+                const res = await fetchWithAuth('/api/auth/me');
+                if (!res.ok) {
+                    throw new Error('Failed to fetch user info');
+                }
+                const userData = await res.json();
+                user.value = userData;
+                
+                if (user.value.role !== 'admin' && user.value.role !== 'super_admin') {
                     window.location.href = '/';
                     return;
                 }
-            } else {
+            } catch (e) {
+                console.error('Auth check failed:', e);
                 window.location.href = '/';
                 return;
             }

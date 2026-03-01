@@ -1,5 +1,5 @@
 import db from '../db.js';
-import { resetPassword } from '../services/authService.js';
+import { resetPassword, getUserById } from '../services/authService.js';
 import { sendTemplateNotification } from '../services/notificationService.js';
 import { getFileStream } from '../services/fileService.js';
 import archiver from 'archiver';
@@ -12,10 +12,15 @@ export default async function (fastify, opts) {
   const requireAdmin = async (request, reply) => {
     try {
       await request.jwtVerify();
-      const user = request.user;
+      // Fetch fresh user data from DB to ensure role is current
+      const user = await getUserById(request.user.id);
+      
       if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
         return reply.code(403).send({ error: 'Admin access required' });
       }
+      
+      // Update request.user with fresh data
+      request.user = user;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
@@ -25,10 +30,15 @@ export default async function (fastify, opts) {
   const requireSuperAdmin = async (request, reply) => {
     try {
       await request.jwtVerify();
-      const user = request.user;
+      // Fetch fresh user data from DB to ensure role is current
+      const user = await getUserById(request.user.id);
+      
       if (!user || user.role !== 'super_admin') {
         return reply.code(403).send({ error: 'Super Admin access required' });
       }
+      
+      // Update request.user with fresh data
+      request.user = user;
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
