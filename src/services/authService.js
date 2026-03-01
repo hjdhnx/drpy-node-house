@@ -132,6 +132,11 @@ export async function changePassword(userId, oldPassword, newPassword) {
   return { success: true };
 }
 
+export async function getUserById(userId) {
+  const stmt = db.prepare('SELECT id, username, role, status FROM users WHERE id = ?');
+  return stmt.get(userId);
+}
+
 export async function resetPassword(userId, newPassword) {
   const stmt = db.prepare('SELECT id FROM users WHERE id = ?');
   const user = stmt.get(userId);

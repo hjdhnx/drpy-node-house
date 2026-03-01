@@ -1,4 +1,4 @@
-import { registerUser, loginUser, changePassword, getRegistrationPolicy, getUploadConfig } from '../services/authService.js';
+import { registerUser, loginUser, changePassword, getRegistrationPolicy, getUploadConfig, getUserById } from '../services/authService.js';
 import { notifyAdminsTemplate } from '../services/notificationService.js';
 
 export default async function (fastify, opts) {
@@ -70,7 +70,12 @@ export default async function (fastify, opts) {
   fastify.get('/me', {
     onRequest: [fastify.authenticate]
   }, async (request, reply) => {
-    return request.user;
+    // Fetch fresh user data from DB instead of using stale token payload
+    const user = await getUserById(request.user.id);
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    return user;
   });
 
   fastify.post('/change-password', {
