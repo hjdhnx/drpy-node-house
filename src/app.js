@@ -11,6 +11,7 @@ import fastifyJwt from '@fastify/jwt';
 import fileRoutes from './routes/files.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
+import notificationRoutes from './routes/notifications.js';
 import { readFileSync } from 'fs';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
@@ -52,6 +53,7 @@ fastify.register(fastifyStatic, {
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(fileRoutes, { prefix: '/api/files' });
 fastify.register(adminRoutes, { prefix: '/api/admin' });
+fastify.register(notificationRoutes, { prefix: '/api/notifications' });
 
 // Initialize services before starting
 fastify.addHook('onReady', async () => {

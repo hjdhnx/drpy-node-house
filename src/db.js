@@ -45,6 +45,21 @@ db.run(`
   )
 `);
 
+// Notifications Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT DEFAULT 'system', -- 'system', 'approval', 'account'
+    is_read INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    link TEXT,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )
+`);
+
 // Files Table (Add user_id and is_public if not exists)
 // SQLite ALTER TABLE limitations: cannot add multiple columns or check IF NOT EXISTS easily in one go.
 // But for simplicity in dev, we can create if not exists, and alter if missing.

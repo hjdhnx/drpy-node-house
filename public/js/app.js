@@ -50,16 +50,89 @@ createApp({
             icp: ''
         });
 
+        // Notifications
+        const notifications = ref([]);
+        const unreadNotificationsCount = ref(0);
+        const showNotifications = ref(false);
+
+        const fetchNotifications = async () => {
+            if (!token.value) return;
+            try {
+                const res = await fetchWithAuth('/api/notifications?limit=10');
+                const data = await res.json();
+                notifications.value = data.notifications;
+                unreadNotificationsCount.value = data.unreadCount;
+            } catch (e) {
+                console.error('Failed to fetch notifications', e);
+            }
+        };
+
+        const markAllAsRead = async () => {
+            try {
+                await fetchWithAuth('/api/notifications/read-all', { method: 'POST' });
+                unreadNotificationsCount.value = 0;
+                notifications.value.forEach(n => n.is_read = 1);
+            } catch (e) {
+                console.error('Failed to mark all as read', e);
+            }
+        };
+
+        const handleNotificationClick = async (note) => {
+            if (!note.is_read) {
+                try {
+                    await fetchWithAuth(`/api/notifications/${note.id}/read`, { method: 'POST' });
+                    note.is_read = 1;
+                    unreadNotificationsCount.value = Math.max(0, unreadNotificationsCount.value - 1);
+                } catch (e) {
+                    console.error('Failed to mark notification as read', e);
+                }
+            }
+            if (note.link) {
+                window.location.href = note.link;
+            }
+        };
+
+        const toggleNotifications = () => {
+            showNotifications.value = !showNotifications.value;
+            if (showNotifications.value) {
+                fetchNotifications();
+            }
+        };
+
+        const fetchWithAuth = async (url, options = {}) => {
+            const headers = { ...options.headers };
+            if (token.value) {
+                headers['Authorization'] = `Bearer ${token.value}`;
+            }
+            const res = await fetch(url, { ...options, headers });
+            if (res.status === 401) {
+                logout();
+            }
+            return res;
+        };
+
         // Computed permissions
         const canUpload = computed(() => {
+            // If user is pending, treat as anonymous for upload permission
+            if (user.value && user.value.status === 'pending') {
+                return uploadConfig.value.anonymous_upload === 'true';
+            }
             return user.value || uploadConfig.value.anonymous_upload === 'true';
         });
 
         const canPreview = computed(() => {
+            // If user is pending, treat as anonymous for preview permission
+            if (user.value && user.value.status === 'pending') {
+                return uploadConfig.value.anonymous_preview === 'true';
+            }
             return user.value || uploadConfig.value.anonymous_preview === 'true';
         });
 
         const canDownload = computed(() => {
+            // If user is pending, treat as anonymous for download permission
+            if (user.value && user.value.status === 'pending') {
+                return uploadConfig.value.anonymous_download === 'true';
+            }
             return user.value || uploadConfig.value.anonymous_download === 'true';
         });
 
@@ -538,11 +611,17 @@ createApp({
             return url;
         };
 
-        onMounted(() => {
+        onMounted(async () => {
             checkStatus();
-            checkAuth();
+            await fetchPolicy();
+            await checkAuth();
+            
+            if (user.value) {
+                fetchNotifications();
+                setInterval(fetchNotifications, 60000);
+            }
+            
             fetchFiles();
-            fetchPolicy();
         });
 
         return {
@@ -602,7 +681,13 @@ createApp({
             fileInputAccept,
             showChangePasswordModal,
             changePasswordForm,
-            changePassword
+            changePassword,
+            notifications,
+            unreadNotificationsCount,
+            showNotifications,
+            toggleNotifications,
+            markAllAsRead,
+            handleNotificationClick
         };
     }
 }).mount('#app');

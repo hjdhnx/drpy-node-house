@@ -116,14 +116,55 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-4 w-full md:w-auto justify-center md:justify-end">
+            <div class="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-center md:justify-end">
                 <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors whitespace-nowrap">
                     {{ lang === 'zh' ? 'EN' : '中文' }}
                 </button>
                 
                 <div class="h-6 w-px bg-gray-200"></div>
 
-                <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                <!-- Notifications -->
+                <div class="relative" v-if="user">
+                    <button @click="toggleNotifications" class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span v-if="unreadNotificationsCount > 0" class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                    </button>
+
+                    <div v-if="showNotifications" class="fixed top-24 left-1/2 -translate-x-1/2 w-[90vw] max-w-sm md:absolute md:top-full md:left-auto md:translate-x-0 md:right-0 md:mt-2 md:w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                        <div class="p-3 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                            <h3 class="text-sm font-semibold text-gray-700">{{ t.notifications }}</h3>
+                            <button v-if="unreadNotificationsCount > 0" @click="markAllAsRead" class="text-xs text-blue-600 hover:text-blue-800 font-medium">{{ t.markAllRead }}</button>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <div v-if="notifications.length === 0" class="p-8 text-center text-gray-400 text-sm">
+                                {{ t.noNotifications }}
+                            </div>
+                            <div v-else>
+                                <div v-for="note in notifications" :key="note.id" 
+                                     class="p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer relative"
+                                     :class="{'bg-blue-50/30': !note.is_read}"
+                                     @click="handleNotificationClick(note)">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            <div class="w-2 h-2 rounded-full" :class="note.is_read ? 'bg-transparent' : 'bg-blue-500'"></div>
+                                        </div>
+                                        <div class="ml-2 w-full">
+                                            <p class="text-sm font-medium text-gray-800" :class="{'font-bold': !note.is_read}">{{ note.title }}</p>
+                                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ note.message }}</p>
+                                            <p class="text-[10px] text-gray-400 mt-1">{{ formatDate(note.created_at) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Overlay to close dropdown -->
+                    <div v-if="showNotifications" @click="showNotifications = false" class="fixed inset-0 z-40 cursor-default"></div>
+                </div>
+
+                <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full flex-shrink-0">
                     <span class="w-2 h-2 rounded-full" :class="status === 'ok' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'"></span>
                     <span class="text-gray-600">{{ status === 'ok' ? t.online : t.offline }}</span>
                 </div>
@@ -139,8 +180,11 @@
                         <div class="flex flex-col items-end">
                             <span class="text-sm font-semibold text-gray-700">{{ user.username }}</span>
                             <div class="flex items-center space-x-2">
-                                <span class="text-xs text-green-600 bg-green-50 px-1.5 rounded">{{ t.verified }}</span>
-                                <button @click="showChangePasswordModal = true" class="text-xs text-blue-600 hover:underline">
+                                <span v-if="user.status === 'pending'" class="text-xs text-amber-600 bg-amber-50 px-1.5 rounded animate-pulse whitespace-nowrap" :title="t.pendingApproval">
+                                    {{ t.pendingApproval }}
+                                </span>
+                                <span v-else class="text-xs text-green-600 bg-green-50 px-1.5 rounded whitespace-nowrap">{{ t.verified }}</span>
+                                <button @click="showChangePasswordModal = true" class="text-xs text-blue-600 hover:underline whitespace-nowrap">
                                     {{ t.changePassword }}
                                 </button>
                             </div>
@@ -217,15 +261,25 @@
                         </div>
                     </div>
                     
+                    <div v-else-if="user && user.status === 'pending'" class="text-center p-6 bg-amber-50 border-2 border-dashed border-amber-200 rounded-xl">
+                        <div class="w-12 h-12 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <p class="text-amber-800 font-medium mb-2 text-sm">{{ t.pendingApproval }}</p>
+                        <p class="text-amber-600 text-xs">{{ t.uploadRestricted }}</p>
+                    </div>
+
                     <div v-else class="text-center p-6 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
                         <div class="w-12 h-12 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <p class="text-gray-600 font-medium mb-2 text-sm">登录后上传文件</p>
+                        <p class="text-gray-600 font-medium mb-2 text-sm">{{ t.loginToUpload }}</p>
                         <button @click="showLogin = true; showRegister = false" class="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline">
-                            立即登录
+                            {{ t.loginNow }}
                         </button>
                     </div>
 
@@ -418,7 +472,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </a>
-                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="t.loginToPreview">
+                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingPreview : t.loginToPreview">
                                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                                 </svg>
@@ -429,7 +483,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4 4m4-4v12" />
                                                 </svg>
                                             </a>
-                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="t.loginToDownload">
+                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingDownload : t.loginToDownload">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

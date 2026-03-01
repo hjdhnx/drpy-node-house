@@ -1,4 +1,5 @@
 import { registerUser, loginUser, changePassword, getRegistrationPolicy, getUploadConfig } from '../services/authService.js';
+import { notifyAdmins } from '../services/notificationService.js';
 
 export default async function (fastify, opts) {
 
@@ -18,12 +19,18 @@ export default async function (fastify, opts) {
     try {
       const user = await registerUser(username, password, inviteCode, reason);
       
+      // Notify admins if pending approval
       if (user.status === 'pending') {
-        return { user, message: 'Registration successful. Please wait for admin approval.' };
+        notifyAdmins(
+          'New Registration Request', 
+          `User ${username} has registered and requires approval.`, 
+          'approval',
+          '/admin.html'
+        );
       }
 
-      // Generate token
-      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role });
+      // Generate token (Allow login even if pending)
+      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role, status: user.status });
       return { user, token };
     } catch (err) {
       if (err.message === 'Username already exists') {
@@ -49,10 +56,10 @@ export default async function (fastify, opts) {
 
     try {
       const user = await loginUser(username, password);
-      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role });
+      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role, status: user.status });
       return { user, token };
     } catch (err) {
-      if (err.message === 'Invalid username or password' || err.message === 'Account is banned' || err.message === 'Account is pending approval') {
+      if (err.message === 'Invalid username or password' || err.message === 'Account is banned') {
         return reply.code(401).send({ error: err.message });
       }
       request.log.error(err);

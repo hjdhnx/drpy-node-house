@@ -1,5 +1,6 @@
 import db from '../db.js';
 import { resetPassword } from '../services/authService.js';
+import { createNotification } from '../services/notificationService.js';
 
 export default async function (fastify, opts) {
   
@@ -106,6 +107,15 @@ export default async function (fastify, opts) {
 
       if (info.changes === 0) {
         return reply.code(404).send({ error: 'User not found' });
+      }
+
+      // Notify user on status change
+      if (status) {
+        if (status === 'active') {
+          createNotification(id, 'Account Approved', 'Your account has been approved. You can now access all features.', 'account');
+        } else if (status === 'banned') {
+          createNotification(id, 'Account Banned', 'Your account has been banned due to policy violations.', 'account');
+        }
       }
 
       return { success: true };

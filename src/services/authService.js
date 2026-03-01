@@ -105,11 +105,12 @@ export async function loginUser(username, password) {
     throw new Error('Account is banned');
   }
   
-  if (user.status === 'pending') {
-    throw new Error('Account is pending approval');
-  }
+  // Pending users can login, but will have restricted access
+  // if (user.status === 'pending') {
+  //   throw new Error('Account is pending approval');
+  // }
 
-  return { id: user.id, username: user.username, role: user.role };
+  return { id: user.id, username: user.username, role: user.role, status: user.status };
 }
 
 export async function changePassword(userId, oldPassword, newPassword) {
