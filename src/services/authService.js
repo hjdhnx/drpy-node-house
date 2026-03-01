@@ -31,7 +31,9 @@ export async function getUploadConfig() {
     allowed_tags: 'ds,dr2,cat,php,hipy',
     anonymous_upload: 'false',
     anonymous_preview: 'false',
-    anonymous_download: 'false'
+    anonymous_download: 'false',
+    site_copyright: 'Copyright © 2026 Drpy Node House. All Rights Reserved.',
+    site_icp: '京ICP备88888888号-1'
   };
 
   results.forEach(row => {

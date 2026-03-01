@@ -20,7 +20,9 @@ createApp({
             allowed_tags: 'ds,dr2,cat,php,hipy',
             anonymous_upload: 'false',
             anonymous_preview: 'false',
-            anonymous_download: 'false'
+            anonymous_download: 'false',
+            site_copyright: '',
+            site_icp: ''
         });
         const invites = ref([]);
         const notification = ref({ show: false, message: '', type: 'success' });

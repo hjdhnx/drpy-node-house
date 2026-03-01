@@ -41,6 +41,10 @@ createApp({
             anonymous_preview: 'false',
             anonymous_download: 'false'
         });
+        const siteInfo = ref({
+            copyright: '',
+            icp: ''
+        });
 
         // Computed permissions
         const canUpload = computed(() => {
@@ -164,6 +168,8 @@ createApp({
                 registrationPolicy.value = data.policy;
                 if (data.uploadConfig) {
                     uploadConfig.value = data.uploadConfig;
+                    if (data.uploadConfig.site_copyright) siteInfo.value.copyright = data.uploadConfig.site_copyright;
+                    if (data.uploadConfig.site_icp) siteInfo.value.icp = data.uploadConfig.site_icp;
                 }
             } catch (e) {
                 console.error(e);
@@ -581,6 +587,7 @@ createApp({
             canUpload,
             canPreview,
             canDownload,
+            siteInfo,
             showTagModal,
             currentFile,
             selectedTags,

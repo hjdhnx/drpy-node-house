@@ -613,6 +613,18 @@
                 </form>
             </div>
         </div>
+        <!-- Footer -->
+        <footer class="mt-8 border-t border-gray-200/60 bg-white/50 backdrop-blur-sm py-6">
+            <div class="container mx-auto px-4 text-center">
+                <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-4 text-sm text-gray-500">
+                    <p v-if="siteInfo.copyright">{{ siteInfo.copyright }}</p>
+                    <p v-if="siteInfo.icp" class="flex items-center hover:text-gray-700 transition-colors">
+                        <span class="hidden md:inline mx-2 text-gray-300">|</span>
+                        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ siteInfo.icp }}</a>
+                    </p>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script type="module" src="/js/app.js"></script>

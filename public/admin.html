@@ -280,40 +280,50 @@
                 <div v-else-if="currentView === 'settings'" key="settings" class="h-full flex flex-col">
                     <div class="glass-panel rounded-2xl shadow-sm p-6 w-full flex-1 flex flex-col border-0 ring-1 ring-gray-900/5 overflow-hidden">
                         <div class="flex-1 overflow-y-auto pr-4">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
                                 <!-- Left Column -->
-                                <div class="space-y-5">
-                                    <div class="border-b border-gray-100 pb-3">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">注册控制</h3>
-                                        <p class="text-sm text-gray-500">管理新用户如何加入系统</p>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">注册策略</label>
-                                        <div class="relative">
-                                            <select v-model="settings.registration_policy" class="block w-full pl-4 pr-10 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors cursor-pointer appearance-none shadow-sm">
-                                                <option value="open">🔓 开放注册 (Open)</option>
-                                                <option value="closed">🔒 关闭注册 (Closed)</option>
-                                                <option value="approval">👮 需要审核 (Approval)</option>
-                                                <option value="invite">🎫 仅限邀请 (Invite Only)</option>
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                <div class="space-y-6">
+                                    <!-- Registration Control -->
+                                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                                        <div class="border-b border-gray-100 pb-3 mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                 </svg>
+                                                注册控制
+                                            </h3>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">注册策略</label>
+                                            <div class="relative">
+                                                <select v-model="settings.registration_policy" class="block w-full pl-4 pr-10 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors cursor-pointer appearance-none shadow-sm">
+                                                    <option value="open">🔓 开放注册 (Open)</option>
+                                                    <option value="closed">🔒 关闭注册 (Closed)</option>
+                                                    <option value="approval">👮 需要审核 (Approval)</option>
+                                                    <option value="invite">🎫 仅限邀请 (Invite Only)</option>
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="pt-6 border-t border-gray-100">
-                                        <div class="border-b border-gray-100 pb-3 mb-5">
-                                            <h3 class="text-lg font-semibold text-gray-900 mb-1">匿名访问控制</h3>
-                                            <p class="text-sm text-gray-500">管理未登录用户的权限</p>
+                                    <!-- Anonymous Access -->
+                                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                                        <div class="border-b border-gray-100 pb-3 mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                匿名访问控制
+                                            </h3>
                                         </div>
-                                        
                                         <div class="space-y-4">
-                                            <!-- Anonymous Upload -->
-                                            <div class="flex items-center justify-between">
+                                            <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
                                                 <div>
                                                     <label class="text-sm font-medium text-gray-700">匿名上传</label>
                                                     <p class="text-xs text-gray-500">允许未登录用户上传文件</p>
@@ -323,15 +333,10 @@
                                                     :class="settings.anonymous_upload === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
                                                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                                 >
-                                                    <span 
-                                                        :class="settings.anonymous_upload === 'true' ? 'translate-x-5' : 'translate-x-0'" 
-                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                                                    ></span>
+                                                    <span :class="settings.anonymous_upload === 'true' ? 'translate-x-5' : 'translate-x-0'" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                                 </button>
                                             </div>
-
-                                            <!-- Anonymous Preview -->
-                                            <div class="flex items-center justify-between">
+                                            <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
                                                 <div>
                                                     <label class="text-sm font-medium text-gray-700">匿名预览</label>
                                                     <p class="text-xs text-gray-500">允许未登录用户预览文件</p>
@@ -341,15 +346,10 @@
                                                     :class="settings.anonymous_preview === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
                                                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                                 >
-                                                    <span 
-                                                        :class="settings.anonymous_preview === 'true' ? 'translate-x-5' : 'translate-x-0'" 
-                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                                                    ></span>
+                                                    <span :class="settings.anonymous_preview === 'true' ? 'translate-x-5' : 'translate-x-0'" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                                 </button>
                                             </div>
-
-                                            <!-- Anonymous Download -->
-                                            <div class="flex items-center justify-between">
+                                            <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
                                                 <div>
                                                     <label class="text-sm font-medium text-gray-700">匿名下载</label>
                                                     <p class="text-xs text-gray-500">允许未登录用户下载文件</p>
@@ -359,10 +359,7 @@
                                                     :class="settings.anonymous_download === 'true' ? 'bg-blue-600' : 'bg-gray-200'" 
                                                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                                 >
-                                                    <span 
-                                                        :class="settings.anonymous_download === 'true' ? 'translate-x-5' : 'translate-x-0'" 
-                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                                                    ></span>
+                                                    <span :class="settings.anonymous_download === 'true' ? 'translate-x-5' : 'translate-x-0'" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                                 </button>
                                             </div>
                                         </div>
@@ -370,56 +367,78 @@
                                 </div>
 
                                 <!-- Right Column -->
-                                <div class="space-y-5">
-                                    <div class="border-b border-gray-100 pb-3">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">文件上传限制</h3>
-                                        <p class="text-sm text-gray-500">控制用户上传文件的类型和大小</p>
-                                    </div>
-
-                                    <div class="space-y-5">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">允许的文件类型</label>
-                                            <input type="text" v-model="settings.allowed_extensions" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder=".json,.txt,.py,.php,.js,.m3u">
-                                            <p class="mt-2 text-xs text-gray-500">
-                                                用逗号分隔后缀名，例如: .jpg,.png,.txt
-                                            </p>
+                                <div class="space-y-6">
+                                    <!-- File Upload Limits -->
+                                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                                        <div class="border-b border-gray-100 pb-3 mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                文件上传限制
+                                            </h3>
                                         </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">允许的标签</label>
-                                            <input type="text" v-model="settings.allowed_tags" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="ds,dr2,cat,php,hipy">
-                                            <p class="mt-2 text-xs text-gray-500">
-                                                用逗号分隔标签，用户只能从中选择
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">最大文件大小</label>
-                                            <div class="flex items-center space-x-4">
-                                                <div class="relative flex-1">
-                                                    <input type="number" v-model.number="settings.max_file_size" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm">
-                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                                        <span class="text-gray-400 text-sm">Bytes</span>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">允许的文件类型</label>
+                                                <input type="text" v-model="settings.allowed_extensions" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder=".json,.txt,.py,.php,.js,.m3u">
+                                                <p class="mt-2 text-xs text-gray-500">用逗号分隔后缀名</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">允许的标签</label>
+                                                <input type="text" v-model="settings.allowed_tags" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="ds,dr2,cat,php,hipy">
+                                                <p class="mt-2 text-xs text-gray-500">用逗号分隔标签</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">最大文件大小</label>
+                                                <div class="flex items-center space-x-4">
+                                                    <div class="relative flex-1">
+                                                        <input type="number" v-model.number="settings.max_file_size" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm">
+                                                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                                                            <span class="text-gray-400 text-sm">Bytes</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="bg-gray-100 px-4 py-2.5 rounded-xl min-w-[120px] text-center text-sm font-medium text-gray-700 border border-gray-200">
+                                                        {{ formatSize(settings.max_file_size) }}
                                                     </div>
                                                 </div>
-                                                <div class="bg-gray-100 px-4 py-2.5 rounded-xl min-w-[120px] text-center text-sm font-medium text-gray-700 border border-gray-200">
-                                                    {{ formatSize(settings.max_file_size) }}
-                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Site Info -->
+                                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                                        <div class="border-b border-gray-100 pb-3 mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                站点信息
+                                            </h3>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Copyright</label>
+                                                <input type="text" v-model="settings.site_copyright" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="Copyright © 2026 Drpy Node House. All Rights Reserved.">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">ICP备案号</label>
+                                                <input type="text" v-model="settings.site_icp" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="京ICP备88888888号-1">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="flex justify-end pt-4 mt-2 border-t border-gray-100">
-                            <button @click="saveSettings" :disabled="loading" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-medium">
-                                <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {{ loading ? 'Saving...' : 'Save Changes' }}
-                            </button>
+                            <!-- Fixed Footer -->
+                            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur border-t border-gray-200 flex justify-end z-10">
+                                <button @click="saveSettings" :disabled="loading" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-medium">
+                                    <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    {{ loading ? 'Saving...' : 'Save Changes' }}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
