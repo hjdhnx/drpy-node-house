@@ -1,6 +1,6 @@
 import db from '../db.js';
 import { resetPassword } from '../services/authService.js';
-import { createNotification } from '../services/notificationService.js';
+import { sendTemplateNotification } from '../services/notificationService.js';
 
 export default async function (fastify, opts) {
   
@@ -112,9 +112,11 @@ export default async function (fastify, opts) {
       // Notify user on status change
       if (status) {
         if (status === 'active') {
-          createNotification(id, 'Account Approved', 'Your account has been approved. You can now access all features.', 'account');
+          sendTemplateNotification(id, 'account_approved', {}, 'account');
         } else if (status === 'banned') {
-          createNotification(id, 'Account Banned', 'Your account has been banned due to policy violations.', 'account');
+          sendTemplateNotification(id, 'account_banned', {}, 'account');
+        } else if (status === 'pending') {
+          // Typically we don't set status back to pending, but if we did
         }
       }
 

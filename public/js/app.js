@@ -54,17 +54,77 @@ createApp({
         const notifications = ref([]);
         const unreadNotificationsCount = ref(0);
         const showNotifications = ref(false);
+        const showAllNotificationsModal = ref(false);
+        const allNotifications = ref([]);
+        const allNotificationsPage = ref(1);
+        const allNotificationsTotal = ref(0);
+        const allNotificationsLoading = ref(false);
+        const allNotificationsHasMore = ref(true);
+
+        const parseNotificationContent = (content) => {
+            try {
+                const obj = JSON.parse(content);
+                if (obj && typeof obj === 'object' && (obj.en || obj.zh)) {
+                    return obj[lang.value] || obj.en || obj.zh || content;
+                }
+            } catch (e) {
+                // Not JSON, return as is
+            }
+            return content;
+        };
 
         const fetchNotifications = async () => {
             if (!token.value) return;
             try {
-                const res = await fetchWithAuth('/api/notifications?limit=10');
+                const res = await fetchWithAuth('/api/notifications'); // Use default limit from backend
                 const data = await res.json();
-                notifications.value = data.notifications;
+                notifications.value = data.notifications.map(n => ({
+                    ...n,
+                    title: parseNotificationContent(n.title),
+                    message: parseNotificationContent(n.message)
+                }));
                 unreadNotificationsCount.value = data.unreadCount;
             } catch (e) {
                 console.error('Failed to fetch notifications', e);
             }
+        };
+
+        const fetchAllNotifications = async (reset = false) => {
+            if (reset) {
+                allNotificationsPage.value = 1;
+                allNotifications.value = [];
+                allNotificationsHasMore.value = true;
+            }
+            if (!allNotificationsHasMore.value || allNotificationsLoading.value) return;
+
+            allNotificationsLoading.value = true;
+            try {
+                const res = await fetchWithAuth(`/api/notifications?page=${allNotificationsPage.value}&limit=20`);
+                const data = await res.json();
+                
+                const newNotifications = data.notifications.map(n => ({
+                    ...n,
+                    title: parseNotificationContent(n.title),
+                    message: parseNotificationContent(n.message)
+                }));
+
+                if (newNotifications.length < 20) {
+                    allNotificationsHasMore.value = false;
+                }
+
+                allNotifications.value = [...allNotifications.value, ...newNotifications];
+                allNotificationsPage.value++;
+            } catch (e) {
+                console.error('Failed to fetch all notifications', e);
+            } finally {
+                allNotificationsLoading.value = false;
+            }
+        };
+
+        const openAllNotifications = () => {
+            showNotifications.value = false;
+            showAllNotificationsModal.value = true;
+            fetchAllNotifications(true);
         };
 
         const markAllAsRead = async () => {
@@ -687,7 +747,13 @@ createApp({
             showNotifications,
             toggleNotifications,
             markAllAsRead,
-            handleNotificationClick
+            handleNotificationClick,
+            showAllNotificationsModal,
+            allNotifications,
+            allNotificationsLoading,
+            allNotificationsHasMore,
+            openAllNotifications,
+            fetchAllNotifications
         };
     }
 }).mount('#app');

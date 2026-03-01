@@ -1,5 +1,5 @@
 import { registerUser, loginUser, changePassword, getRegistrationPolicy, getUploadConfig } from '../services/authService.js';
-import { notifyAdmins } from '../services/notificationService.js';
+import { notifyAdminsTemplate } from '../services/notificationService.js';
 
 export default async function (fastify, opts) {
 
@@ -21,9 +21,9 @@ export default async function (fastify, opts) {
       
       // Notify admins if pending approval
       if (user.status === 'pending') {
-        notifyAdmins(
-          'New Registration Request', 
-          `User ${username} has registered and requires approval.`, 
+        notifyAdminsTemplate(
+          'register_approval', 
+          { username, reason }, 
           'approval',
           '/admin.html'
         );

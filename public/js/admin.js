@@ -35,7 +35,26 @@ createApp({
             anonymous_preview: 'false',
             anonymous_download: 'false',
             site_copyright: '',
-            site_icp: ''
+            site_icp: '',
+            notification_limit: 10,
+            notification_templates: JSON.stringify({
+                'register_approval': {
+                    'en': { title: 'New Registration Request', message: 'User {{username}} has registered and requires approval.' },
+                    'zh': { title: '新用户注册申请', message: '用户 {{username}} 已注册，需要您的审核。' }
+                },
+                'account_approved': {
+                    'en': { title: 'Account Approved', message: 'Your account has been approved. You can now access all features.' },
+                    'zh': { title: '账号审核通过', message: '您的账号已通过审核，现在可以使用所有功能。' }
+                },
+                'account_banned': {
+                    'en': { title: 'Account Banned', message: 'Your account has been banned due to policy violations.' },
+                    'zh': { title: '账号已被封禁', message: '由于违反相关规定，您的账号已被封禁。' }
+                },
+                'account_unbanned': {
+                    'en': { title: 'Account Unbanned', message: 'Your account has been unbanned.' },
+                    'zh': { title: '账号解封', message: '您的账号已解除封禁。' }
+                }
+            }, null, 2)
         });
         const invites = ref([]);
         const notification = ref({ show: false, message: '', type: 'success' });
@@ -134,8 +153,18 @@ createApp({
                 // Ensure max_file_size is number
                 if (data.max_file_size) data.max_file_size = parseInt(data.max_file_size);
                 settings.value = { ...settings.value, ...data };
+
+                // Ensure notification_templates is formatted
+                try {
+                    if (settings.value.notification_templates && typeof settings.value.notification_templates === 'string') {
+                        const parsed = JSON.parse(settings.value.notification_templates);
+                        settings.value.notification_templates = JSON.stringify(parsed, null, 2);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse templates', e);
+                }
             } catch (e) {
-                console.error(e);
+                console.error('Failed to fetch settings', e);
             }
         };
 

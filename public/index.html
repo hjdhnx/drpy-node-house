@@ -157,6 +157,9 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="p-2 text-center border-t border-gray-50 bg-gray-50/50 hover:bg-gray-100 transition-colors cursor-pointer" @click="openAllNotifications">
+                                    <span class="text-xs text-blue-600 font-medium">{{ t.viewAllNotifications }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -559,6 +562,62 @@
                             <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             {{ t.save }}
                         </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- All Notifications Modal -->
+        <transition name="fade">
+            <div v-if="showAllNotificationsModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden transform transition-all scale-100">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-xl font-bold text-gray-800">{{ t.allNotifications }}</h3>
+                        <div class="flex items-center space-x-4">
+                            <button v-if="unreadNotificationsCount > 0" @click="markAllAsRead" class="text-sm text-blue-600 hover:text-blue-800 font-medium">{{ t.markAllRead }}</button>
+                            <button @click="showAllNotificationsModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-0">
+                        <div v-if="allNotifications.length === 0 && !allNotificationsLoading" class="p-12 text-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <p>{{ t.noNotifications }}</p>
+                        </div>
+                        <div v-else>
+                            <div v-for="note in allNotifications" :key="note.id" 
+                                 class="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer relative group"
+                                 :class="{'bg-blue-50/30': !note.is_read}"
+                                 @click="handleNotificationClick(note)">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-1 mr-3">
+                                        <div class="w-2.5 h-2.5 rounded-full transition-colors" :class="note.is_read ? 'bg-gray-200 group-hover:bg-gray-300' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'"></div>
+                                    </div>
+                                    <div class="w-full">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <p class="text-base font-semibold text-gray-800" :class="{'text-blue-700': !note.is_read}">{{ note.title }}</p>
+                                            <span class="text-xs text-gray-400 whitespace-nowrap ml-2">{{ formatDate(note.created_at) }}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 leading-relaxed">{{ note.message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-if="allNotificationsHasMore" class="p-4 text-center">
+                                <button @click="fetchAllNotifications(false)" :disabled="allNotificationsLoading" class="px-6 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                                    <span v-if="allNotificationsLoading" class="flex items-center">
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        {{ t.loadMore }}...
+                                    </span>
+                                    <span v-else>{{ t.loadMore }}</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

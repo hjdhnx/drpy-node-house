@@ -7,11 +7,11 @@ export default async function (fastify, opts) {
   }, async (request, reply) => {
     try {
       const page = parseInt(request.query.page) || 1;
-      const limit = parseInt(request.query.limit) || 20;
-      const offset = (page - 1) * limit;
+      const limit = parseInt(request.query.limit) || null; // Use service default if null
+      const offset = (page - 1) * (limit || 10); // Default 10 for offset calculation if limit is null
       
-      const { notifications, unreadCount } = await getNotifications(request.user.id, limit, offset);
-      return { notifications, unreadCount };
+      const result = await getNotifications(request.user.id, limit, offset);
+      return result;
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Failed to fetch notifications' });
