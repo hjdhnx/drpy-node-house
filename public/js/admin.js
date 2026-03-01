@@ -360,6 +360,42 @@ createApp({
             }
         };
 
+        const downloadPackage = async () => {
+            try {
+                // Since this is a download, we can't use fetchWithAuth easily for blobs if we want to trigger browser download
+                // But we need auth header.
+                // We can use fetch and create object URL.
+                const res = await fetchWithAuth('/api/admin/download-package');
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    // Get filename from header if possible, or generate default
+                    const disposition = res.headers.get('content-disposition');
+                    let filename = 'package.zip';
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        const matches = filenameRegex.exec(disposition);
+                        if (matches != null && matches[1]) { 
+                            filename = matches[1].replace(/['"]/g, '');
+                        }
+                    }
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    showNotification('打包下载成功');
+                } else {
+                    showNotification('下载失败', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showNotification('下载失败: ' + e.message, 'error');
+            }
+        };
+
         const formatDate = (timestamp) => {
             if (!timestamp) return '-';
             const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
@@ -439,7 +475,8 @@ createApp({
             isSidebarOpen,
             t,
             lang,
-            toggleLang
+            toggleLang,
+            downloadPackage
         };
     }
 }).mount('#app');

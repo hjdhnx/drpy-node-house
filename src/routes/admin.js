@@ -1,6 +1,9 @@
 import db from '../db.js';
 import { resetPassword } from '../services/authService.js';
 import { sendTemplateNotification } from '../services/notificationService.js';
+import { getFileStream } from '../services/fileService.js';
+import archiver from 'archiver';
+import path from 'path';
 
 export default async function (fastify, opts) {
   
@@ -330,6 +333,103 @@ export default async function (fastify, opts) {
     } catch (err) {
       request.log.error(err);
       return reply.code(500).send({ error: 'Failed to delete invite code' });
+    }
+  });
+
+  // Download all public files as a package
+  fastify.get('/download-package', { onRequest: [requireAdmin] }, async (request, reply) => {
+    try {
+        const stmt = db.prepare('SELECT cid, filename, tags FROM files WHERE is_public = 1');
+        const files = stmt.all();
+
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Sets the compression level.
+        });
+
+        // Set response headers
+        const date = new Date();
+        const dateStr = date.getFullYear() + 
+                        String(date.getMonth() + 1).padStart(2, '0') + 
+                        String(date.getDate()).padStart(2, '0');
+        const filename = `package-${dateStr}.zip`;
+
+        reply.header('Content-Type', 'application/zip');
+        reply.header('Content-Disposition', `attachment; filename=${filename}`);
+
+        // Pipe archive to response
+        // Fastify reply can handle streams, but we need to verify if archiver works well directly.
+        // archiver.pipe() writes to a stream. reply.send(stream) reads from a stream.
+        // We can create a PassThrough stream if needed, or pipe directly to response raw object?
+        // Fastify recommends reply.send(stream).
+        // Archiver isn't exactly a readable stream in that sense, it's a writable stream that pipes to destination.
+        // Wait, archive.pipe(dest). dest must be writable.
+        // Fastify response is writable? No, we should give a Readable stream to reply.send().
+        // BUT archiver logic is: create archive, pipe it to writable.
+        // To bridge, we can use PassThrough.
+        
+        const { PassThrough } = await import('stream');
+        const stream = new PassThrough();
+        
+        archive.pipe(stream);
+        
+        // Add files to archive
+        for (const file of files) {
+            // Skip files starting with _ (special/hidden files)
+            if (file.filename.startsWith('_')) {
+                continue;
+            }
+
+            try {
+                // Determine folder path
+                let folder = null;
+                const ext = path.extname(file.filename).toLowerCase();
+                const tags = file.tags ? file.tags.split(',').map(t => t.trim()) : [];
+
+                if (['.json', '.txt', '.m3u'].includes(ext)) {
+                    folder = 'json/';
+                } else if (ext === '.js') {
+                    if (tags.includes('dr2')) {
+                        folder = 'spider/js_dr2/';
+                    } else {
+                        folder = 'spider/js/';
+                    }
+                } else if (ext === '.php') {
+                    folder = 'spider/php/';
+                } else if (ext === '.py') {
+                    folder = 'spider/py/';
+                }
+
+                if (!folder) {
+                    continue;
+                }
+
+                // Get file content stream
+                // getFileStream returns async iterable (Readable.from(asyncIterable))
+                // archiver supports stream input.
+                const { stream: fileContentStream } = await getFileStream(file.cid, request.user.id);
+                
+                // Need to convert async iterable to Node.js Readable stream if it isn't one already
+                // getFileStream returns asyncIterable directly from fs.cat
+                const { Readable } = await import('stream');
+                const nodeStream = Readable.from(fileContentStream);
+
+                archive.append(nodeStream, { name: folder + file.filename });
+            } catch (e) {
+                request.log.error(`Failed to add file ${file.filename} to package: ${e.message}`);
+                // Continue with other files? Or fail? Best effort is better.
+                // We can add a text file with error log?
+                archive.append(Buffer.from(`Error adding file: ${e.message}`), { name: `errors/${file.filename}.error.txt` });
+            }
+        }
+
+        // Finalize the archive (this indicates we are done appending)
+        archive.finalize();
+
+        return reply.send(stream);
+
+    } catch (err) {
+        request.log.error(err);
+        return reply.code(500).send({ error: 'Failed to create package' });
     }
   });
 }

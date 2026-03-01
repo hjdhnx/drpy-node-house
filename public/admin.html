@@ -160,6 +160,12 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <button @click="downloadPackage" class="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center text-sm text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4 4m4-4v12" />
+                        </svg>
+                        {{ t.downloadPackage }}
+                    </button>
                     <div class="bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 flex items-center text-sm text-gray-600">
                         <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
                         {{ t.systemActive }}
@@ -494,13 +500,16 @@
 
                 <!-- Invites View -->
                 <div v-else-if="currentView === 'invites'" key="invites" class="h-full overflow-y-auto pr-2">
-                    <div class="flex justify-end mb-6">
-                        <button @click="showInviteModal = true" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center font-medium text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            {{ t.generateInvite }}
-                        </button>
+                    <div class="flex justify-between mb-6">
+                        <div></div> <!-- Spacer -->
+                        <div class="flex space-x-3">
+                            <button @click="showInviteModal = true" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center font-medium text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                {{ t.generateInvite }}
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="glass-panel rounded-2xl shadow-sm overflow-hidden border-0 ring-1 ring-gray-900/5">
