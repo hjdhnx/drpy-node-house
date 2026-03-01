@@ -22,6 +22,7 @@
 *   **后台管理面板**：
     *   **用户管理**：查看用户列表，封禁/解封用户，提升用户为管理员，删除用户（仅限超级管理员）。
     *   **系统设置**：配置注册策略（开放/关闭/邀请/审核）、允许的文件后缀、最大文件大小、允许的标签等。
+    *   **全站打包下载**：支持管理员一键下载全站公开资源，支持自定义目录映射、文件过滤（排除特殊文件）及自动重名处理。
     *   **邀请码管理**：生成和管理注册邀请码。
 *   **高性能后端**：
     *   基于 [Bun](https://bun.sh) 运行时和 [Fastify](https://fastify.dev) 框架。
@@ -33,6 +34,22 @@
 *   **Backend**: Fastify, @fastify/jwt, @fastify/multipart, SQLite (bun:sqlite)
 *   **Storage**: Helia (IPFS), Blockstore/Datastore FS
 *   **Frontend**: Vue 3 (ESM via Import Map), Tailwind CSS (CDN), Native HTML5 Drag & Drop API
+
+## 🗓️ 规划中的功能 (Roadmap)
+
+### v1.1 - 用户交互增强 (Next Release)
+- [ ] **实时聊天系统**：基于 WebSocket 实现站内用户实时通讯。
+  - [ ] 全局公共聊天室
+  - [ ] 用户私信功能
+  - [ ] 在线用户列表
+- [ ] **用户个人主页**：展示用户公开分享的文件和基本信息。
+- [ ] **文件评论与点赞**：支持对公开文件进行评论互动。
+- [ ] **消息通知中心**：系统通知、审核结果、互动消息的实时推送。
+
+### v1.2 - 存储增强
+- [ ] **IPFS 集群支持**：支持连接外部 IPFS 节点或 Pinning 服务。
+- [ ] **大文件分片上传**：优化大文件上传体验，支持断点续传。
+- [ ] **WebDAV 支持**：支持通过 WebDAV 协议挂载存储。
 
 ## 🚀 快速开始 (本地开发)
 
@@ -129,7 +146,7 @@ PORT=8080 bun run pm2:start
 
 系统包含三种角色：
 1.  **User (普通用户)**：上传、管理自己的文件。
-2.  **Admin (管理员)**：进入后台管理，管理用户状态（封禁/解封），配置系统设置，管理邀请码。
+2.  **Admin (管理员)**：进入后台管理，管理用户状态（封禁/解封），配置系统设置，管理邀请码，全站打包下载。
 3.  **Super Admin (超级管理员)**：拥有 Admin 的所有权限，额外支持**查看所有用户的文件**、**删除用户**。
 
 ### 如何设置超级管理员
@@ -160,7 +177,7 @@ bun scripts/manage_roles.js set <username> super_admin
 │   └── js/             # 前端逻辑
 ├── src/                # 后端源码
 │   ├── app.js          # 应用入口
-│   ├── config.js       # 配置文件
+│   ├── config.js       # 配置文件 (包含 DEFAULT_SETTINGS)
 │   ├── db.js           # SQLite 数据库初始化
 │   ├── ipfs.js         # Helia IPFS 节点封装
 │   ├── routes/         # API 路由 (Auth, Files, Admin)
@@ -186,6 +203,7 @@ bun scripts/manage_roles.js set <username> super_admin
     *   `PUT /api/admin/users/:id` - 更新用户状态/角色
     *   `DELETE /api/admin/users/:id` - 删除用户 (Super Admin)
     *   `GET/PUT /api/admin/settings` - 系统设置
+    *   `GET /api/admin/download-package` - 全站打包下载
     *   `GET/POST/DELETE /api/admin/invites` - 邀请码管理
 
 ## 📄 License
