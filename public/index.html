@@ -116,7 +116,7 @@
             </div>
             
             <div class="flex items-center space-x-4 w-full md:w-auto justify-center md:justify-end">
-                <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors">
+                <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors whitespace-nowrap">
                     {{ lang === 'zh' ? 'EN' : '中文' }}
                 </button>
                 
@@ -124,7 +124,7 @@
 
                 <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full">
                     <span class="w-2 h-2 rounded-full" :class="status === 'ok' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'"></span>
-                    <span class="text-gray-600">{{ status === 'ok' ? 'Online' : 'Offline' }}</span>
+                    <span class="text-gray-600">{{ status === 'ok' ? t.online : t.offline }}</span>
                 </div>
 
                 <template v-if="user">
@@ -138,7 +138,7 @@
                         <div class="flex flex-col items-end">
                             <span class="text-sm font-semibold text-gray-700">{{ user.username }}</span>
                             <div class="flex items-center space-x-2">
-                                <span class="text-xs text-green-600 bg-green-50 px-1.5 rounded">Verified</span>
+                                <span class="text-xs text-green-600 bg-green-50 px-1.5 rounded">{{ t.verified }}</span>
                                 <button @click="showChangePasswordModal = true" class="text-xs text-blue-600 hover:underline">
                                     {{ t.changePassword }}
                                 </button>
@@ -238,15 +238,15 @@
                 
                 <!-- Stats / Info Card (Optional placeholder for future) -->
                 <div class="glass-panel rounded-2xl shadow-sm p-6">
-                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Storage Info</h3>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">{{ t.storageInfo }}</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-xl">
                             <div class="text-2xl font-bold text-gray-800">{{ files.length }}</div>
-                            <div class="text-xs text-gray-500">Total Files</div>
+                            <div class="text-xs text-gray-500">{{ t.totalFiles }}</div>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-xl">
                             <div class="text-2xl font-bold text-gray-800">{{ formatSize(files.reduce((acc, f) => acc + f.size, 0)) }}</div>
-                            <div class="text-xs text-gray-500">Total Size</div>
+                            <div class="text-xs text-gray-500">{{ t.totalSize }}</div>
                         </div>
                     </div>
                 </div>

@@ -12,6 +12,10 @@ createApp({
             localStorage.setItem('lang', lang.value);
         };
 
+        watch(lang, () => {
+             document.title = t.value.title;
+        }, { immediate: true });
+
         const status = ref('Checking...');
         const version = ref('');
         const files = ref([]);

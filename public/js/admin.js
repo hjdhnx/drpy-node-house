@@ -1,7 +1,20 @@
-import { createApp, ref, onMounted, watch } from 'vue';
+import { createApp, ref, onMounted, watch, computed } from 'vue';
+import { zh, en } from './i18n.js';
 
 createApp({
     setup() {
+        const lang = ref(localStorage.getItem('lang') || 'zh');
+        const t = computed(() => lang.value === 'zh' ? zh : en);
+
+        const toggleLang = () => {
+            lang.value = lang.value === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('lang', lang.value);
+        };
+
+        watch(lang, () => {
+             document.title = t.value.adminPanel + ' - ' + t.value.title;
+        }, { immediate: true });
+
         const user = ref(null);
         const version = ref('');
         const token = ref(localStorage.getItem('token') || null);
@@ -350,7 +363,10 @@ createApp({
             userSearchQuery,
             handleUserSearch,
             clearUserSearch,
-            isSidebarOpen
+            isSidebarOpen,
+            t,
+            lang,
+            toggleLang
         };
     }
 }).mount('#app');
