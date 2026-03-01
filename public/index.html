@@ -93,8 +93,8 @@
 <body class="bg-gray-50 min-h-screen bg-[url('https://grainy-gradients.vercel.app/noise.svg')]">
     <div id="app" v-cloak class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Navbar -->
-        <nav class="glass-panel rounded-2xl shadow-sm p-4 mb-8 flex justify-between items-center sticky top-4 z-40">
-            <div class="flex items-center space-x-3">
+        <nav class="glass-panel rounded-2xl shadow-sm p-4 mb-8 flex flex-col md:flex-row justify-between items-center sticky top-4 z-40 gap-4 md:gap-0">
+            <div class="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
                     DS
                 </div>
@@ -107,7 +107,7 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-4 w-full md:w-auto justify-center md:justify-end">
                 <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors">
                     {{ lang === 'zh' ? 'EN' : '中文' }}
                 </button>
@@ -247,15 +247,15 @@
             <!-- File List -->
             <div class="lg:col-span-8 lg:h-full lg:overflow-hidden">
                 <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white/50 file-list-header flex-shrink-0">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-white/50 file-list-header flex-shrink-0 gap-4 md:gap-0">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center w-full md:w-auto justify-center md:justify-start">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             {{ t.filesTitle }}
                         </h2>
                         
-                        <div class="flex items-center space-x-3">
+                        <div class="flex flex-wrap items-center justify-center md:justify-end gap-3 w-full md:w-auto">
                             <!-- Tag Filter -->
                             <div class="relative group" v-if="allowedTags.length > 0">
                                 <select 
@@ -297,7 +297,7 @@
                             </div>
 
                             <!-- Pagination Controls (Top) -->
-                            <div class="flex items-center space-x-2 text-sm text-gray-600 mr-2" v-if="totalPages > 1 || totalItems > 0">
+                            <div class="flex items-center space-x-2 text-sm text-gray-600" v-if="totalPages > 1 || totalItems > 0">
                                 <select v-model="itemsPerPage" @change="changeItemsPerPage" class="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1 px-2">
                                     <option :value="10">10</option>
                                     <option :value="20">20</option>
