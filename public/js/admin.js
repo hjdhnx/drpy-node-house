@@ -26,6 +26,7 @@ createApp({
         });
         const invites = ref([]);
         const notification = ref({ show: false, message: '', type: 'success' });
+        const isSidebarOpen = ref(false);
         
         // UI State
         const loading = ref(false);
@@ -348,7 +349,8 @@ createApp({
             changeUsersPerPage,
             userSearchQuery,
             handleUserSearch,
-            clearUserSearch
+            clearUserSearch,
+            isSidebarOpen
         };
     }
 }).mount('#app');
