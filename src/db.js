@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite';
 import path from 'path';
 import fs from 'fs';
-import config from './config.js';
+import config, { DEFAULT_SETTINGS } from './config.js';
 
 // Ensure data directory exists
 if (!fs.existsSync(config.paths.data)) {
@@ -104,19 +104,7 @@ try {
 } catch (e) {}
 
 // Seed default settings
-const defaultSettings = {
-  registration_policy: 'open', // open, closed, approval, invite
-  allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
-  max_file_size: '204800', // 200KB in bytes
-  allowed_tags: 'ds,dr2,cat,php,hipy',
-  anonymous_upload: 'false',
-  anonymous_preview: 'false',
-  anonymous_download: 'false',
-  site_copyright: 'Copyright © 2026 Drpy Node House. All Rights Reserved.',
-  site_icp: '京ICP备88888888号-1'
-};
-
-for (const [key, value] of Object.entries(defaultSettings)) {
+for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
   db.run('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', key, value);
 }
 

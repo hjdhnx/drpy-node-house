@@ -154,7 +154,10 @@ export const zh = {
     resetConfirm2: '请再次确认：此操作不可撤销，确定要继续吗？',
     resetSuccess: '已恢复默认设置',
     resetFailed: '恢复失败',
-    downloadPackage: '打包下载全站'
+    downloadPackage: '打包下载全站',
+    packageDownloadMode: '全站打包模式',
+    packageDownloadModeEssential: '仅必要文件 (排除特殊/未知文件)',
+    packageDownloadModeAll: '所有文件 (包含所有)'
 };
 
 export const en = {
@@ -314,5 +317,8 @@ export const en = {
     resetConfirm2: 'Please confirm again: This operation cannot be undone. Are you sure?',
     resetSuccess: 'Settings reset to defaults',
     resetFailed: 'Reset failed',
-    downloadPackage: 'Download All Package'
+    downloadPackage: 'Download All Package',
+    packageDownloadMode: 'Package Download Mode',
+    packageDownloadModeEssential: 'Essential Only (Exclude special/unknown)',
+    packageDownloadModeAll: 'All Files (Include everything)'
 };

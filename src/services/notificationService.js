@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { DEFAULT_SETTINGS } from '../config.js';
 
 export async function createNotification(userId, title, message, type = 'system', link = null) {
   const stmt = db.prepare('INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)');
@@ -26,24 +27,12 @@ export async function getNotificationTemplate(key) {
   const stmt = db.prepare("SELECT value FROM settings WHERE key = 'notification_templates'");
   const result = stmt.get();
   
-  const defaultTemplates = {
-    'register_approval': {
-      'en': { title: 'New Registration Request', message: 'User {{username}} has registered and requires approval.' },
-      'zh': { title: '新用户注册申请', message: '用户 {{username}} 已注册，需要您的审核。' }
-    },
-    'account_approved': {
-      'en': { title: 'Account Approved', message: 'Your account has been approved. You can now access all features.' },
-      'zh': { title: '账号审核通过', message: '您的账号已通过审核，现在可以使用所有功能。' }
-    },
-    'account_banned': {
-      'en': { title: 'Account Banned', message: 'Your account has been banned due to policy violations.' },
-      'zh': { title: '账号已被封禁', message: '由于违反相关规定，您的账号已被封禁。' }
-    },
-    'account_unbanned': {
-      'en': { title: 'Account Unbanned', message: 'Your account has been unbanned.' },
-      'zh': { title: '账号解封', message: '您的账号已解除封禁。' }
-    }
-  };
+  let defaultTemplates = {};
+  try {
+    defaultTemplates = JSON.parse(DEFAULT_SETTINGS.notification_templates);
+  } catch (e) {
+    console.error('Failed to parse default notification templates', e);
+  }
 
   let templates = defaultTemplates;
   if (result && result.value) {
