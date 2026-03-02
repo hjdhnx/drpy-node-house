@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS = {
     anonymous_download: 'false',
     
     // Site Info
+    site_name: 'DS源仓库',
     site_copyright: 'Copyright © 2026 Drpy Node House. All Rights Reserved.',
     site_icp: '京ICP备88888888号-1',
     

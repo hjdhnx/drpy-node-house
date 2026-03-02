@@ -66,6 +66,29 @@ fastify.get('/api/status', async (request, reply) => {
   return { status: 'ok', timestamp: Date.now(), version: packageJson.version };
 });
 
+fastify.get('/api/config', async (request, reply) => {
+  const settings = db.prepare('SELECT key, value FROM settings').all();
+  const config = {};
+  settings.forEach(s => {
+    config[s.key] = s.value;
+  });
+  
+  // Filter for public keys only to avoid exposing secrets if any
+  const publicKeys = [
+    'site_name', 'site_copyright', 'site_icp', 
+    'registration_policy', 
+    'anonymous_upload', 'anonymous_preview', 'anonymous_download',
+    'allowed_extensions', 'max_file_size', 'allowed_tags'
+  ];
+  
+  const publicConfig = {};
+  publicKeys.forEach(k => {
+    if (config[k] !== undefined) publicConfig[k] = config[k];
+  });
+  
+  return publicConfig;
+});
+
 // Start server
 const start = async () => {
   try {

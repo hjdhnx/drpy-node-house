@@ -1,5 +1,5 @@
 export const zh = {
-    title: '去中心化文件存储',
+    title: 'DS源仓库',
     subtitle: '基于 IPFS & Fastify 驱动',
     status: '状态',
     login: '登录',
@@ -117,6 +117,7 @@ export const zh = {
     separateTagsByComma: '用逗号分隔标签',
     maxFileSize: '最大文件大小',
     siteInfo: '站点信息',
+    siteName: '站点名称',
     icpNumber: 'ICP备案号',
     searchUserPlaceholder: '搜索用户或理由...',
     searchUser: '搜索用户',
@@ -178,7 +179,7 @@ export const zh = {
 };
 
 export const en = {
-    title: 'Decentralized Storage',
+    title: 'DS Source Warehouse',
     subtitle: 'Powered by IPFS & Fastify',
     status: 'Status',
     login: 'Login',
@@ -296,6 +297,7 @@ export const en = {
     separateTagsByComma: 'Separate tags by comma',
     maxFileSize: 'Max File Size',
     siteInfo: 'Site Info',
+    siteName: 'Site Name',
     icpNumber: 'ICP Number',
     searchUserPlaceholder: 'Search users or reasons...',
     searchUser: 'Search User',

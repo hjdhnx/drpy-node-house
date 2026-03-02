@@ -485,6 +485,10 @@
                                         </div>
                                         <div class="space-y-4">
                                             <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ t.siteName }}</label>
+                                                <input type="text" v-model="settings.site_name" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="DS源仓库">
+                                            </div>
+                                            <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Copyright</label>
                                                 <input type="text" v-model="settings.site_copyright" class="block w-full px-4 py-2.5 text-base border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm rounded-xl bg-gray-50/50 hover:bg-white transition-colors shadow-sm" placeholder="Copyright © 2026 Drpy Node House. All Rights Reserved.">
                                             </div>

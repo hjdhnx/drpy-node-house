@@ -12,8 +12,14 @@ createApp({
             localStorage.setItem('lang', lang.value);
         };
 
-        watch(lang, () => {
-             document.title = t.value.title;
+        const siteInfo = ref({
+            name: '',
+            copyright: '',
+            icp: ''
+        });
+
+        watch([lang, () => siteInfo.value.name], () => {
+             document.title = siteInfo.value.name || t.value.title;
         }, { immediate: true });
 
         const status = ref('Checking...');
@@ -45,11 +51,7 @@ createApp({
             anonymous_preview: 'false',
             anonymous_download: 'false'
         });
-        const siteInfo = ref({
-            copyright: '',
-            icp: ''
-        });
-
+        
         // Notifications
         const notifications = ref([]);
         const unreadNotificationsCount = ref(0);
@@ -308,6 +310,7 @@ createApp({
                 registrationPolicy.value = data.policy;
                 if (data.uploadConfig) {
                     uploadConfig.value = data.uploadConfig;
+                    if (data.uploadConfig.site_name) siteInfo.value.name = data.uploadConfig.site_name;
                     if (data.uploadConfig.site_copyright) siteInfo.value.copyright = data.uploadConfig.site_copyright;
                     if (data.uploadConfig.site_icp) siteInfo.value.icp = data.uploadConfig.site_icp;
                 }
