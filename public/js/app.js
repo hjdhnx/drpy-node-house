@@ -826,10 +826,20 @@ createApp({
             return template.replace('{{lang}}', lang).replace('{{url}}', fullUrl);
         };
 
+        const isAppReady = ref(false);
+
         onMounted(async () => {
-            checkStatus();
-            await fetchPolicy();
-            await checkAuth();
+            try {
+                await Promise.all([
+                    checkStatus(),
+                    fetchPolicy(),
+                    checkAuth()
+                ]);
+            } catch (e) {
+                console.error("Initialization error:", e);
+            } finally {
+                isAppReady.value = true;
+            }
             
             if (user.value) {
                 fetchNotifications();
@@ -840,6 +850,7 @@ createApp({
         });
 
         return {
+            isAppReady,
             lang,
             t,
             toggleLang,
