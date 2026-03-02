@@ -1148,7 +1148,7 @@ createApp({
                lang = 'hipy';
             }
             
-            const fullUrl = window.location.origin + directUrl;
+            const fullUrl = window.location.origin + directUrl + '#' + file.filename;
             // The template expects {{url}} to be replaced by the download link
             // And {{lang}} by the calculated lang
             return template.replace('{{lang}}', lang).replace('{{url}}', fullUrl);
