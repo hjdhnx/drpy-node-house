@@ -386,6 +386,7 @@ createApp({
         };
 
         const logout = () => {
+            if (!confirm(t.value.confirmLogout)) return;
             token.value = null;
             user.value = null;
             localStorage.removeItem('token');
