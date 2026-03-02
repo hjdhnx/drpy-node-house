@@ -87,6 +87,11 @@ createApp({
         // View Navigation
         const currentView = ref('files'); // 'files', 'forum', 'chat'
 
+        // Scroll Containers
+        const chatContainer = ref(null);
+        const forumListContainer = ref(null);
+        const forumDetailContainer = ref(null);
+
         // Forum State
         const topics = ref([]);
         const forumPage = ref(1);
@@ -106,11 +111,18 @@ createApp({
 
         const switchView = (view) => {
             currentView.value = view;
+            // Scroll to top when switching to fixed views (forum/chat) to ensure proper layout
+            if (view !== 'files') {
+                window.scrollTo(0, 0);
+            }
+            
             if (view === 'forum') {
                 fetchTopics();
             } else if (view === 'chat') {
                 connectChat();
-                scrollToBottom();
+                setTimeout(() => {
+                    scrollToBottom();
+                }, 100);
             }
         };
 
@@ -331,6 +343,53 @@ createApp({
                     container.scrollTop = container.scrollHeight;
                 }
             }, 100);
+        };
+
+        const getScrollContainer = () => {
+            let el = null;
+            if (currentView.value === 'chat') {
+                el = chatContainer.value;
+                if (!el) el = document.getElementById('chat-container');
+            } else if (currentView.value === 'forum') {
+                if (currentTopic.value) {
+                    el = forumDetailContainer.value;
+                    if (!el) el = document.getElementById('forum-detail-container');
+                } else {
+                    el = forumListContainer.value;
+                    if (!el) el = document.getElementById('forum-list-container');
+                }
+            }
+            return el;
+        };
+
+        const scrollToTopAction = () => {
+            if (currentView.value === 'files') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            const el = getScrollContainer();
+            if (el) {
+                // Use scrollTop which is widely supported
+                // Smooth behavior is handled by CSS 'scroll-smooth' class
+                el.scrollTop = 0;
+            } else {
+                console.warn('Scroll target not found for view:', currentView.value);
+            }
+        };
+
+        const scrollToBottomAction = () => {
+            if (currentView.value === 'files') {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                return;
+            }
+
+            const el = getScrollContainer();
+            if (el) {
+                el.scrollTop = el.scrollHeight;
+            } else {
+                console.warn('Scroll target not found for view:', currentView.value);
+            }
         };
 
         const parseNotificationContent = (content) => {
@@ -1097,6 +1156,8 @@ createApp({
 
         const isAppReady = ref(false);
 
+        const isMobileUploadExpanded = ref(true);
+
         onMounted(async () => {
             try {
                 await Promise.all([
@@ -1120,6 +1181,7 @@ createApp({
 
         return {
             isAppReady,
+            isMobileUploadExpanded,
             lang,
             t,
             toggleLang,
@@ -1218,7 +1280,12 @@ createApp({
             showOnlineUsersModal,
             sendChatMessage,
             renderMarkdown,
-            handleMdAction
+            handleMdAction,
+            scrollToTop: scrollToTopAction,
+            scrollToBottom: scrollToBottomAction,
+            chatContainer,
+            forumListContainer,
+            forumDetailContainer
         };
     }
 }).mount('#app');
