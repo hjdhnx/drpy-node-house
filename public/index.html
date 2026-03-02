@@ -111,7 +111,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen bg-[url('https://grainy-gradients.vercel.app/noise.svg')]">
-    <div id="app" v-cloak class="container mx-auto px-4 py-4 max-w-6xl relative min-h-screen">
+    <div id="app" v-cloak class="container mx-auto px-2 py-2 max-w-6xl relative h-dvh flex flex-col lg:h-screen lg:p-4 lg:block">
         <!-- Global Loading State -->
         <div v-if="!isAppReady" class="absolute inset-0 flex items-center justify-center z-50">
             <div class="flex flex-col items-center">
@@ -123,33 +123,33 @@
         </div>
 
         <!-- Main Content -->
-        <div v-else class="h-full">
+        <div v-else class="h-full flex flex-col lg:block">
             <div class="flex flex-col h-full animate-fade-in">
                 <!-- Navbar -->
-                <nav class="glass-panel rounded-2xl shadow-sm p-3 mb-4 flex flex-col md:flex-row justify-between items-center sticky top-4 z-40 gap-4 md:gap-0">
-            <div class="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
+                <nav class="glass-panel rounded-2xl shadow-sm p-2 mb-2 flex flex-row justify-between items-center gap-2 flex-shrink-0 relative z-30">
+            <div class="flex items-center space-x-2 w-auto justify-start min-w-0 flex-1">
+                <div class="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-lg shadow-blue-500/30 flex-shrink-0">
                     DS
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">{{ siteInfo.name || t.title }}</h1>
-                    <div class="flex items-center space-x-2">
-                        <p class="text-xs text-gray-500 font-medium">{{ t.subtitle }}</p>
-                        <span v-if="version" class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-md font-mono">v{{ version }}</span>
+                <div class="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
+                    <h1 class="text-base md:text-xl font-bold text-gray-800 tracking-tight leading-none truncate">{{ siteInfo.name || t.title }}</h1>
+                    <div class="flex items-center space-x-1.5 md:space-x-2 min-w-0">
+                        <p class="text-xs text-gray-500 font-medium truncate flex-shrink-1">{{ t.subtitle }}</p>
+                        <span v-if="version" class="text-[10px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded-md font-mono flex-shrink-0 leading-none">v{{ version }}</span>
                     </div>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-center md:justify-end">
-                <button @click="toggleLang" class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-sm transition-colors whitespace-nowrap">
+            <div class="flex items-center space-x-1.5 md:space-x-4 w-auto justify-end flex-shrink-0">
+                <button @click="toggleLang" class="p-1.5 md:p-2 rounded-lg hover:bg-gray-100 text-gray-600 font-medium text-xs md:text-sm transition-colors whitespace-nowrap">
                     {{ lang === 'zh' ? 'EN' : '中文' }}
                 </button>
                 
-                <div class="h-6 w-px bg-gray-200"></div>
+                <div class="h-4 md:h-6 w-px bg-gray-200"></div>
 
                 <!-- Notifications -->
                 <div class="relative" v-if="user">
-                    <button @click="toggleNotifications" class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors relative">
+                    <button @click="toggleNotifications" class="p-1.5 md:p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors relative">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
@@ -191,7 +191,12 @@
                     <div v-if="showNotifications" @click="showNotifications = false" class="fixed inset-0 z-40 cursor-default"></div>
                 </div>
 
-                <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full flex-shrink-0">
+                <!-- Online Status Dot (Mobile) -->
+                <div class="flex items-center md:hidden" :title="status === 'ok' ? t.online : t.offline">
+                    <span class="w-2 h-2 rounded-full" :class="status === 'ok' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'"></span>
+                </div>
+
+                <div class="text-xs font-medium flex items-center space-x-2 bg-gray-100 px-3 py-1.5 rounded-full flex-shrink-0 hidden md:flex">
                     <span class="w-2 h-2 rounded-full" :class="status === 'ok' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'"></span>
                     <span class="text-gray-600">{{ status === 'ok' ? t.online : t.offline }}</span>
                 </div>
@@ -211,9 +216,6 @@
                                     {{ t.pendingApproval }}
                                 </span>
                                 <span v-else class="text-xs text-green-600 bg-green-50 px-1.5 rounded whitespace-nowrap">{{ t.verified }}</span>
-                                <button @click="showChangePasswordModal = true" class="text-xs text-blue-600 hover:underline whitespace-nowrap">
-                                    {{ t.changePassword }}
-                                </button>
                             </div>
                         </div>
                         <div class="flex flex-col items-end md:hidden">
@@ -224,15 +226,15 @@
                             <span v-else class="text-[10px] text-green-600 bg-green-50 px-1 rounded whitespace-nowrap">{{ t.verified }}</span>
                         </div>
 
-                        <div class="flex items-center">
-                            <button @click="showChangePasswordModal = true" class="p-1.5 md:p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors md:hidden" :title="t.changePassword">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </button>
-                            <button @click="openProfileModal" class="p-1.5 md:p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors" :title="t.userProfile">
+                        <div class="flex items-center gap-0.5">
+                            <button @click="showProfileModal = true" class="p-1.5 md:p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" :title="t.userProfile">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </button>
+                            <button @click="showChangePasswordModal = true" class="p-1.5 md:p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" :title="t.changePassword">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
                             </button>
                             <button @click="logout" class="p-1.5 md:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
@@ -245,10 +247,10 @@
                 </template>
                 <template v-else>
                     <div class="flex items-center space-x-2">
-                        <button @click="showLogin = true; showRegister = false" class="text-gray-600 hover:text-blue-600 font-medium text-sm px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <button @click="showLogin = true; showRegister = false" class="text-gray-600 hover:text-blue-600 font-medium text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2 rounded-lg hover:bg-blue-50 transition-colors">
                             {{ t.login }}
                         </button>
-                        <button @click="showRegister = true; showLogin = false" class="bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-lg shadow-gray-900/20 transition-all hover:scale-105">
+                        <button @click="showRegister = true; showLogin = false" class="bg-gray-900 hover:bg-gray-800 text-white text-xs md:text-sm font-medium px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow-lg shadow-gray-900/20 transition-all hover:scale-105">
                             {{ t.register }}
                         </button>
                     </div>
@@ -256,17 +258,17 @@
             </div>
         </nav>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <main class="flex-1 min-h-0 flex flex-col gap-2 lg:grid lg:grid-cols-12 lg:gap-4">
             <!-- Upload Sidebar -->
-            <div class="lg:col-span-4 space-y-4 lg:overflow-y-auto lg:pr-2 lg:h-full scrollable-column">
+            <div class="lg:col-span-4 space-y-2 lg:space-y-4 lg:overflow-y-auto lg:pr-2 lg:h-full scrollable-column flex-shrink-0">
                 <!-- Navigation Tabs (Compact Horizontal Row) -->
-                <div class="glass-panel rounded-2xl shadow-sm p-2 flex flex-row gap-2 justify-between items-center overflow-x-auto">
+                <div class="glass-panel rounded-2xl shadow-sm p-1 gap-1 flex flex-row justify-between items-center overflow-x-auto">
                     <button @click="switchView('files')" 
-                        class="p-2 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
                         :class="currentView === 'files' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'files' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                         </div>
@@ -274,11 +276,11 @@
                     </button>
                     
                     <button @click="switchView('forum')" 
-                        class="p-2 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
                         :class="currentView === 'forum' ? 'bg-purple-50 text-purple-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'forum' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                             </svg>
                         </div>
@@ -286,11 +288,11 @@
                     </button>
                     
                     <button @click="switchView('chat')" 
-                        class="p-2 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
                         :class="currentView === 'chat' ? 'bg-green-50 text-green-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'chat' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
@@ -400,7 +402,7 @@
                 </div>
 
                  <!-- Chat Sidebar (Online Users) -->
-                <div v-if="currentView === 'chat'" class="glass-panel rounded-2xl shadow-sm p-4 flex flex-col h-full max-h-[calc(100vh-200px)]">
+                <div v-if="currentView === 'chat'" class="glass-panel rounded-2xl shadow-sm p-4 hidden lg:flex flex-col h-full max-h-[calc(100vh-200px)]">
                      <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center justify-between">
                         <span>{{ t.onlineUsers }}</span>
                         <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">?</span>
@@ -427,7 +429,7 @@
             </div>
 
             <!-- File List -->
-            <div v-if="currentView === 'files'" class="lg:col-span-8 lg:h-full lg:overflow-hidden">
+            <div v-if="currentView === 'files'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex-1 min-h-0">
                 <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
                     <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-white/50 file-list-header flex-shrink-0 gap-4 md:gap-0">
                         <h2 class="text-lg font-bold text-gray-800 flex items-center w-full md:w-auto justify-center md:justify-start">
@@ -648,7 +650,7 @@
                 </div>
             </div>
             <!-- Forum View -->
-            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col gap-4">
+            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col gap-4 flex-1 min-h-0">
                 <div v-if="!currentTopic" class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white/50 flex-shrink-0">
                         <h2 class="text-lg font-bold text-gray-800 flex items-center">
@@ -844,22 +846,28 @@
             </div>
 
             <!-- Chat View -->
-            <div v-if="currentView === 'chat'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col h-[calc(100dvh-140px)] lg:h-full">
+            <div v-if="currentView === 'chat'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full relative">
-                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white/50 flex-shrink-0 backdrop-blur-md z-10">
-                         <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                    <div class="p-2 border-b border-gray-100 flex justify-between items-center bg-white/50 flex-shrink-0 backdrop-blur-md z-10">
+                         <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                             {{ t.chat }}
                         </h2>
                         <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 rounded-full" :class="isChatConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
-                            <span class="text-xs text-gray-500">{{ isChatConnected ? t.online : t.offline }}</span>
+                            <button @click="showOnlineUsersModal = true" class="lg:hidden p-1 text-gray-500 hover:text-green-600 rounded hover:bg-green-50 relative" title="Online Users">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <span class="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full ring-2 ring-white"></span>
+                            </button>
+                            <span class="w-2 h-2 rounded-full hidden lg:block" :class="isChatConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
+                            <span class="text-xs text-gray-500 hidden lg:block">{{ isChatConnected ? t.online : t.offline }}</span>
                         </div>
                     </div>
                     
-                    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth pb-20 lg:pb-4">
+                    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth pb-2">
                         <div v-for="(msg, index) in chatMessages" :key="index">
                             <div v-if="msg.type === 'system'" class="text-center my-2">
                                 <span class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full">{{ msg.content }}</span>
@@ -882,7 +890,7 @@
                         </div>
                     </div>
                     
-                    <div class="p-3 border-t border-gray-100 bg-white/80 backdrop-blur-md absolute bottom-0 left-0 right-0 z-20 lg:relative lg:bg-white/50" v-if="user">
+                    <div class="p-2 border-t border-gray-100 bg-white/80 backdrop-blur-md relative z-20 flex-shrink-0" v-if="user">
                         <div class="flex justify-end px-2 mb-1 space-x-1">
                             <button @click="handleMdAction('chat', 'bold', 'chat-input')" class="p-1 text-gray-500 hover:text-green-600 rounded hover:bg-green-50" title="Bold"><b>B</b></button>
                             <button @click="handleMdAction('chat', 'italic', 'chat-input')" class="p-1 text-gray-500 hover:text-green-600 rounded hover:bg-green-50" title="Italic"><i>I</i></button>
@@ -893,19 +901,19 @@
                             <textarea 
                                 id="chat-input"
                                 v-model="chatInput" 
-                                class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all shadow-sm resize-none h-12 max-h-24" 
+                                class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all shadow-sm resize-none h-10 max-h-24 text-sm" 
                                 :placeholder="t.chatPlaceholder"
                                 @keydown.enter.exact.prevent="sendChatMessage"
                                 @keydown.enter.shift.exact="() => {}"
                             ></textarea>
-                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-full shadow-lg shadow-green-500/20 transition-all flex-shrink-0 active:scale-95 mb-1">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg shadow-green-500/20 transition-all flex-shrink-0 active:scale-95 mb-0.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                 </svg>
                             </button>
                         </form>
                     </div>
-                     <div v-else class="p-4 border-t border-gray-100 bg-gray-50 text-center text-sm text-gray-500 absolute bottom-0 left-0 right-0 lg:relative">
+                     <div v-else class="p-4 border-t border-gray-100 bg-gray-50 text-center text-sm text-gray-500 flex-shrink-0">
                         {{ t.loginToChat }}
                     </div>
                 </div>
@@ -1197,6 +1205,39 @@
                             <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             {{ t.save }}
                         </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Online Users Modal (Mobile) -->
+        <transition name="fade">
+            <div v-if="showOnlineUsersModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 lg:hidden">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 h-[70vh] flex flex-col">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-lg font-bold text-gray-800">{{ t.onlineUsers }}</h3>
+                        <button @click="showOnlineUsersModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                         <div v-for="u in onlineUsers" :key="u.id" class="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
+                             <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
+                                {{ (u.nickname || u.username || 'A')[0].toUpperCase() }}
+                             </div>
+                             <div>
+                                 <div class="font-medium text-gray-800">{{ u.nickname || u.username }}</div>
+                                 <div class="text-xs text-green-500 flex items-center mt-0.5">
+                                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                                     {{ t.online }} <span v-if="user && user.id === u.id">({{ t.hi }})</span>
+                                 </div>
+                             </div>
+                        </div>
+                        <div v-if="onlineUsers.length === 0" class="text-center text-gray-400 py-8">
+                            No one else is here.
+                        </div>
                     </div>
                 </div>
             </div>

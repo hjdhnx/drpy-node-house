@@ -102,6 +102,7 @@ createApp({
         const ws = ref(null);
         const onlineUsers = ref([]);
         const isChatConnected = ref(false);
+        const showOnlineUsersModal = ref(false);
 
         const switchView = (view) => {
             currentView.value = view;
@@ -1213,6 +1214,7 @@ createApp({
             chatInput,
             onlineUsers,
             isChatConnected,
+            showOnlineUsersModal,
             sendChatMessage,
             renderMarkdown,
             handleMdAction
