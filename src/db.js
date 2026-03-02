@@ -60,6 +60,46 @@ db.run(`
   )
 `);
 
+// Forum Topics Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS topics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER DEFAULT (strftime('%s', 'now')),
+    views INTEGER DEFAULT 0,
+    is_pinned INTEGER DEFAULT 0,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )
+`);
+
+// Forum Comments Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    topic_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY(topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )
+`);
+
+// Chat Messages Table
+db.run(`
+  CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    room TEXT DEFAULT 'general',
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )
+`);
+
 // Files Table (Add user_id and is_public if not exists)
 // SQLite ALTER TABLE limitations: cannot add multiple columns or check IF NOT EXISTS easily in one go.
 // But for simplicity in dev, we can create if not exists, and alter if missing.

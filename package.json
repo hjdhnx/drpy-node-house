@@ -1,6 +1,6 @@
 {
   "name": "decentralized-file-storage",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A decentralized file storage system using Bun, Fastify, and Helia (IPFS).",
   "main": "src/app.js",
   "type": "module",
@@ -35,6 +35,7 @@
     "@fastify/multipart": "^9.4.0",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/static": "^9.0.0",
+    "@fastify/websocket": "^11.2.0",
     "@helia/unixfs": "^7.0.4",
     "@libp2p/tcp": "^11.0.10",
     "archiver": "^7.0.1",

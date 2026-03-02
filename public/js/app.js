@@ -63,6 +63,189 @@ createApp({
         const allNotificationsLoading = ref(false);
         const allNotificationsHasMore = ref(true);
 
+        // View Navigation
+        const currentView = ref('files'); // 'files', 'forum', 'chat'
+
+        // Forum State
+        const topics = ref([]);
+        const forumPage = ref(1);
+        const forumTotalPages = ref(1);
+        const currentTopic = ref(null);
+        const showCreateTopic = ref(false);
+        const newTopicForm = ref({ title: '', content: '' });
+        const newCommentContent = ref('');
+
+        // Chat State
+        const chatMessages = ref([]);
+        const chatInput = ref('');
+        const ws = ref(null);
+        const onlineUsers = ref([]);
+        const isChatConnected = ref(false);
+
+        const switchView = (view) => {
+            currentView.value = view;
+            if (view === 'forum') {
+                fetchTopics();
+            } else if (view === 'chat') {
+                connectChat();
+            }
+        };
+
+        // Forum Functions
+        const fetchTopics = async (page = 1) => {
+            try {
+                const res = await fetch(`/api/forum/topics?page=${page}`);
+                const data = await res.json();
+                topics.value = data.topics;
+                forumPage.value = data.page;
+                forumTotalPages.value = data.totalPages;
+            } catch (e) {
+                console.error('Failed to fetch topics', e);
+            }
+        };
+
+        const openTopic = async (id) => {
+            try {
+                const res = await fetch(`/api/forum/topics/${id}`);
+                const data = await res.json();
+                currentTopic.value = data;
+                window.scrollTo(0, 0);
+            } catch (e) {
+                console.error('Failed to fetch topic', e);
+            }
+        };
+
+        const createTopic = async () => {
+            if (!newTopicForm.value.title || !newTopicForm.value.content) return;
+            try {
+                const res = await fetchWithAuth('/api/forum/topics', {
+                    method: 'POST',
+                    body: JSON.stringify(newTopicForm.value)
+                });
+                if (res.ok) {
+                    showCreateTopic.value = false;
+                    newTopicForm.value = { title: '', content: '' };
+                    fetchTopics();
+                } else {
+                    alert(t.value.opFailed);
+                }
+            } catch (e) {
+                console.error('Failed to create topic', e);
+            }
+        };
+
+        const submitComment = async () => {
+            if (!newCommentContent.value) return;
+            try {
+                const res = await fetchWithAuth(`/api/forum/topics/${currentTopic.value.topic.id}/comments`, {
+                    method: 'POST',
+                    body: JSON.stringify({ content: newCommentContent.value })
+                });
+                if (res.ok) {
+                    newCommentContent.value = '';
+                    openTopic(currentTopic.value.topic.id); // Reload topic
+                } else {
+                    alert(t.value.opFailed);
+                }
+            } catch (e) {
+                console.error('Failed to submit comment', e);
+            }
+        };
+
+        const deleteTopic = async (id) => {
+            if (!confirm(t.value.confirmDeleteTopic)) return;
+            try {
+                const res = await fetchWithAuth(`/api/forum/topics/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    if (currentTopic.value && currentTopic.value.topic.id === id) {
+                        currentTopic.value = null; // Go back to list
+                    }
+                    fetchTopics();
+                } else {
+                    alert(t.value.opFailed);
+                }
+            } catch (e) {
+                console.error('Failed to delete topic', e);
+            }
+        };
+
+        const deleteComment = async (id) => {
+            if (!confirm(t.value.confirmDeleteComment)) return;
+            try {
+                const res = await fetchWithAuth(`/api/forum/comments/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    if (currentTopic.value) {
+                        openTopic(currentTopic.value.topic.id);
+                    }
+                } else {
+                    alert(t.value.opFailed);
+                }
+            } catch (e) {
+                console.error('Failed to delete comment', e);
+            }
+        };
+
+        // Chat Functions
+        const connectChat = () => {
+            if (ws.value && ws.value.readyState === WebSocket.OPEN) return;
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/chat`;
+            
+            ws.value = new WebSocket(wsUrl);
+            
+            ws.value.onopen = () => {
+                isChatConnected.value = true;
+                // Send auth token if logged in
+                if (token.value) {
+                    ws.value.send(JSON.stringify({ type: 'auth', token: token.value }));
+                }
+            };
+
+            ws.value.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'history') {
+                    chatMessages.value = data.data;
+                } else if (data.type === 'message') {
+                    chatMessages.value.push(data.data);
+                    scrollToBottom();
+                } else if (data.type === 'system') {
+                    chatMessages.value.push({ type: 'system', content: data.message });
+                    scrollToBottom();
+                } else if (data.type === 'users') {
+                    onlineUsers.value = data.data;
+                } else if (data.type === 'error') {
+                    if (data.message === 'Invalid token') {
+                        console.error('Session expired or invalid token');
+                        token.value = null;
+                        user.value = null;
+                        localStorage.removeItem('token');
+                    }
+                }
+            };
+
+            ws.value.onclose = () => {
+                isChatConnected.value = false;
+                // Auto reconnect after 3s
+                setTimeout(() => {
+                    if (currentView.value === 'chat') connectChat();
+                }, 3000);
+            };
+        };
+
+        const sendChatMessage = () => {
+            if (!chatInput.value.trim() || !ws.value) return;
+            ws.value.send(JSON.stringify({ type: 'message', content: chatInput.value }));
+            chatInput.value = '';
+        };
+
+        const scrollToBottom = () => {
+            setTimeout(() => {
+                const container = document.getElementById('chat-container');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 100);
+        };
+
         const parseNotificationContent = (content) => {
             try {
                 const obj = JSON.parse(content);
@@ -74,7 +257,6 @@ createApp({
             }
             return content;
         };
-
         const fetchNotifications = async () => {
             if (!token.value) return;
             try {
@@ -926,7 +1108,27 @@ createApp({
             protocolOptions,
             openProfileModal,
             updateProfile,
-            getFileDownloadUrl
+            getFileDownloadUrl,
+            currentView,
+            switchView,
+            topics,
+            forumPage,
+            forumTotalPages,
+            currentTopic,
+            showCreateTopic,
+            newTopicForm,
+            newCommentContent,
+            fetchTopics,
+            openTopic,
+            createTopic,
+            submitComment,
+            deleteTopic,
+            deleteComment,
+            chatMessages,
+            chatInput,
+            onlineUsers,
+            isChatConnected,
+            sendChatMessage
         };
     }
 }).mount('#app');

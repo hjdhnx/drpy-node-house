@@ -9,10 +9,13 @@ import { initHelia } from './ipfs.js';
 import { initSuperAdmin } from './services/authService.js';
 import db from './db.js'; // Ensures DB is initialized
 import fastifyJwt from '@fastify/jwt';
+import fastifyWebsocket from '@fastify/websocket';
 import fileRoutes from './routes/files.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import notificationRoutes from './routes/notifications.js';
+import forumRoutes from './routes/forum.js';
+import chatRoutes from './routes/chat.js';
 import { readFileSync } from 'fs';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
@@ -61,11 +64,15 @@ fastify.register(fastifyStatic, {
   prefix: '/', // Serve static files from root
 });
 
+fastify.register(fastifyWebsocket);
+
 // Register routes
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(fileRoutes, { prefix: '/api/files' });
 fastify.register(adminRoutes, { prefix: '/api/admin' });
 fastify.register(notificationRoutes, { prefix: '/api/notifications' });
+fastify.register(forumRoutes, { prefix: '/api/forum' });
+fastify.register(chatRoutes, { prefix: '/ws' });
 
 // Initialize services before starting
 fastify.addHook('onReady', async () => {
