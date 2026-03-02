@@ -1,8 +1,29 @@
 import { createApp, ref, onMounted, computed, reactive, watch } from 'vue';
 import { zh, en } from './i18n.js';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 createApp({
     setup() {
+        // Markdown Helper
+        const renderMarkdown = (text) => {
+            if (!text) return '';
+            try {
+                const html = marked.parse(text, { breaks: true });
+                return DOMPurify.sanitize(html);
+            } catch (e) {
+                console.error('Markdown parsing error:', e);
+                return text;
+            }
+        };
+
+        const insertMarkdown = (textareaRef, prefix, suffix = '') => {
+            // This function will be passed to the template to handle toolbar clicks
+            // Since we need ref access, we might need to expose it or handle it in the template
+            // A simpler way is to handle text insertion on the bound model, but cursor position is tricky
+            // Let's implement a helper that takes the ref and the model update function
+        };
+
         // I18n
         const lang = ref(localStorage.getItem('lang') || 'zh');
         const t = computed(() => lang.value === 'zh' ? zh : en);
@@ -102,6 +123,67 @@ createApp({
             } catch (e) {
                 console.error('Failed to fetch topics', e);
             }
+        };
+
+        const insertMarkdownAtCursor = (textarea, prefix, suffix = '') => {
+            if (!textarea) return;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const selected = text.substring(start, end);
+            const after = text.substring(end);
+            
+            const newText = before + prefix + selected + suffix + after;
+            
+            // Return new text and new cursor position
+            return {
+                text: newText,
+                cursor: start + prefix.length + selected.length + suffix.length // Place cursor after inserted text? Or wrap?
+                // Standard behavior: if text selected, wrap it and keep selection or move after. 
+                // If no text, insert placeholder inside.
+            };
+        };
+
+        const handleMdAction = (field, action, textareaId) => {
+            const textarea = document.getElementById(textareaId);
+            if (!textarea) return;
+            
+            let prefix = '', suffix = '';
+            switch(action) {
+                case 'bold': prefix = '**'; suffix = '**'; break;
+                case 'italic': prefix = '*'; suffix = '*'; break;
+                case 'code': prefix = '`'; suffix = '`'; break;
+                case 'link': prefix = '['; suffix = '](url)'; break;
+                case 'list': prefix = '\n- '; break;
+            }
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end);
+            
+            let newVal = '';
+            let newCursor = 0;
+
+            if (action === 'link' && !selected) {
+                 newVal = text.substring(0, start) + '[text](url)' + text.substring(end);
+                 newCursor = start + 1; // Highlight 'text'
+            } else {
+                 newVal = text.substring(0, start) + prefix + selected + suffix + text.substring(end);
+                 newCursor = start + prefix.length + selected.length + suffix.length;
+            }
+
+            // Update model
+            if (field === 'newTopicContent') newTopicForm.value.content = newVal;
+            else if (field === 'newComment') newCommentContent.value = newVal;
+            else if (field === 'chat') chatInput.value = newVal;
+
+            // Restore focus next tick
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(newCursor, newCursor);
+            }, 0);
         };
 
         const openTopic = async (id) => {
@@ -206,6 +288,7 @@ createApp({
                 const data = JSON.parse(event.data);
                 if (data.type === 'history') {
                     chatMessages.value = data.data;
+                    scrollToBottom();
                 } else if (data.type === 'message') {
                     chatMessages.value.push(data.data);
                     scrollToBottom();
@@ -242,7 +325,9 @@ createApp({
         const scrollToBottom = () => {
             setTimeout(() => {
                 const container = document.getElementById('chat-container');
-                if (container) container.scrollTop = container.scrollHeight;
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
             }, 100);
         };
 
@@ -1128,7 +1213,9 @@ createApp({
             chatInput,
             onlineUsers,
             isChatConnected,
-            sendChatMessage
+            sendChatMessage,
+            renderMarkdown,
+            handleMdAction
         };
     }
 }).mount('#app');
