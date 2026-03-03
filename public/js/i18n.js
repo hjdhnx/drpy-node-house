@@ -213,6 +213,8 @@ export const zh = {
     confirmRecall: '确定要撤回这条消息吗？',
     messageRecalled: '该消息已撤回',
     systemRecall: '{user} 撤回了一条消息',
+    systemJoin: '{user} 加入了聊天室',
+    systemLeave: '{user} 离开了聊天室',
 };
 
 export const en = {
@@ -430,4 +432,6 @@ export const en = {
     confirmRecall: 'Are you sure you want to recall this message?',
     messageRecalled: 'This message was recalled',
     systemRecall: '{user} recalled a message',
+    systemJoin: '{user} joined the chat',
+    systemLeave: '{user} left the chat',
 };

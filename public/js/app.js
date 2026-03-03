@@ -358,6 +358,14 @@ createApp({
                     const message = t.value.systemRecall.replace('{user}', data.operator);
                     chatMessages.value.push({ type: 'system', content: message });
                     scrollToBottom();
+                } else if (data.type === 'system_join') {
+                    const message = t.value.systemJoin.replace('{user}', data.user);
+                    chatMessages.value.push({ type: 'system', content: message });
+                    scrollToBottom();
+                } else if (data.type === 'system_leave') {
+                    const message = t.value.systemLeave.replace('{user}', data.user);
+                    chatMessages.value.push({ type: 'system', content: message });
+                    scrollToBottom();
                 } else if (data.type === 'message') {
                     chatMessages.value.push(data.data);
                     scrollToBottom();

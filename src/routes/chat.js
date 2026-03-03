@@ -74,7 +74,7 @@ export default async function chatRoutes(fastify, options) {
             
             connection.user = user;
             // Broadcast user join?
-            broadcast({ type: 'system', message: `${user.username} joined.` });
+            broadcast({ type: 'system_join', user: user.nickname || user.username });
             broadcastOnlineUsers();
           } catch (err) {
             if (socket.readyState === 1) {
@@ -178,7 +178,7 @@ export default async function chatRoutes(fastify, options) {
     socket.on('close', () => {
       clients.delete(connection);
       if (connection.user) {
-         broadcast({ type: 'system', message: `${connection.user.username} left.` });
+         broadcast({ type: 'system_leave', user: connection.user.nickname || connection.user.username });
          broadcastOnlineUsers();
       }
     });
