@@ -299,45 +299,45 @@
         </div>
         </div>
 
-        <main class="flex-1 min-h-0 flex flex-col gap-2 lg:grid lg:grid-cols-12 lg:gap-4 overflow-hidden relative w-full">
+        <main class="flex-1 min-h-0 flex flex-col gap-2 lg:grid lg:grid-cols-12 lg:gap-2 overflow-hidden relative w-full">
             <!-- Upload Sidebar -->
             <div class="lg:col-span-4 space-y-2 lg:space-y-4 lg:overflow-y-auto lg:pr-2 lg:h-full scrollable-column flex-shrink-0 lg:max-h-full" :class="{'hidden lg:block': currentView !== 'files'}">
                 <!-- Navigation Tabs (Compact Horizontal Row) -->
                 <div class="glass-panel rounded-2xl shadow-sm p-1 gap-1 hidden lg:flex flex-row justify-between items-center overflow-x-auto">
                     <button @click="switchView('files')" 
-                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1 rounded-xl flex items-center justify-center gap-1 transition-colors flex-1 min-w-0 md:min-w-[80px]"
                         :class="currentView === 'files' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'files' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                         </div>
-                        <span class="font-medium truncate hidden sm:inline">{{ t.filesTitle }}</span>
+                        <span class="font-medium truncate hidden sm:inline text-xs md:text-sm">{{ t.filesTitle }}</span>
                     </button>
                     
                     <button @click="switchView('forum')" 
-                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1 rounded-xl flex items-center justify-center gap-1 transition-colors flex-1 min-w-0 md:min-w-[80px]"
                         :class="currentView === 'forum' ? 'bg-purple-50 text-purple-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'forum' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                             </svg>
                         </div>
-                        <span class="font-medium truncate hidden sm:inline">{{ t.forum }}</span>
+                        <span class="font-medium truncate hidden sm:inline text-xs md:text-sm">{{ t.forum }}</span>
                     </button>
                     
                     <button @click="switchView('chat')" 
-                        class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+                        class="p-1 rounded-xl flex items-center justify-center gap-1 transition-colors flex-1 min-w-0 md:min-w-[80px]"
                         :class="currentView === 'chat' ? 'bg-green-50 text-green-600' : 'hover:bg-gray-50 text-gray-600'">
-                        <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                             :class="currentView === 'chat' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
-                        <span class="font-medium truncate hidden sm:inline">{{ t.chat }}</span>
+                        <span class="font-medium truncate hidden sm:inline text-xs md:text-sm">{{ t.chat }}</span>
                     </button>
                 </div>
 
@@ -356,7 +356,7 @@
                                 </svg>
                             </button>
                             <div v-if="user" class="relative">
-                                <select v-model="isPublicUpload" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pr-8 cursor-pointer hover:bg-gray-100 transition-colors">
+                                <select v-model="isPublicUpload" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 pr-8 cursor-pointer hover:bg-gray-100 transition-colors bg-none">
                                     <option :value="true">🌐 {{ t.public }}</option>
                                     <option :value="false">🔒 {{ t.private }}</option>
                                 </select>
