@@ -1,4 +1,4 @@
-import { uploadFile, listFiles, getFileStream, toggleVisibility, deleteFile, updateFileTags } from '../services/fileService.js';
+import { uploadFile, listFiles, getFile, getFileStream, toggleVisibility, deleteFile, updateFileTags } from '../services/fileService.js';
 import { getUploadConfig } from '../services/authService.js';
 import path from 'path';
 
@@ -161,6 +161,27 @@ export default async function (fastify, opts) {
       }
       request.log.error(err);
       return reply.code(404).send({ error: 'File not found or retrieval failed' });
+    }
+  });
+
+  // Get File Metadata
+  fastify.get('/:cid', async (request, reply) => {
+    const { cid } = request.params;
+    let user = null;
+    try {
+      await request.jwtVerify();
+      user = request.user;
+    } catch (e) {
+      // Ignore
+    }
+
+    try {
+      return getFile(cid, user ? user.id : null, user ? user.role : 'user');
+    } catch (err) {
+      if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
+      if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Operation failed' });
     }
   });
 

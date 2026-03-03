@@ -42,6 +42,24 @@ export async function uploadFile(file, userId = null, isPublic = true, maxSize =
   };
 }
 
+export function getFile(cid, userId = null, userRole = 'user') {
+  const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
+  const file = stmt.get(cid);
+
+  if (!file) throw new Error('File not found');
+
+  // Check permission
+  if (userRole === 'super_admin') return file;
+  
+  if (file.is_public === 0) {
+      if (!userId || file.user_id !== userId) {
+          throw new Error('Unauthorized');
+      }
+  }
+
+  return file;
+}
+
 export function listFiles(userId = null, page = 1, limit = 10, search = '', tag = '', userRole = 'user') {
   // Base query condition
   // We need to handle complex logic: (is_public OR is_owner) AND (filename LIKE %search%)

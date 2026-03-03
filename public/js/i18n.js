@@ -205,6 +205,10 @@ export const zh = {
     packageDownloadModeAll: '所有文件 (包含所有)',
     downloadProtocols: '下载协议配置 (JSON)',
     downloadProtocolsHint: '配置非直链下载的协议头。键为显示名称，值为模板。支持 {{lang}} 和 {{url}} 变量。',
+    selectFile: '选择文件',
+    insertFile: '引用文件',
+    searchFilePlaceholder: '搜索文件以引用...',
+    insert: '插入',
 };
 
 export const en = {
@@ -413,5 +417,9 @@ export const en = {
     packageDownloadModeEssential: 'Essential Only (Exclude special/unknown)',
     packageDownloadModeAll: 'All Files (Include everything)',
     downloadProtocols: 'Download Protocol Config (JSON)',
-    downloadProtocolsHint: 'Configure non-direct download protocols. Key is display name, value is template. Supports {{lang}} and {{url}} variables.'
+    downloadProtocolsHint: 'Configure non-direct download protocols. Key is display name, value is template. Supports {{lang}} and {{url}} variables.',
+    selectFile: 'Select File',
+    insertFile: 'Insert File Reference',
+    searchFilePlaceholder: 'Search files to reference...',
+    insert: 'Insert',
 };
