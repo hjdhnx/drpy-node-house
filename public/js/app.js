@@ -9,8 +9,15 @@ createApp({
         const renderMarkdown = (text) => {
             if (!text) return '';
             try {
-                const html = marked.parse(text, { breaks: true });
-                return DOMPurify.sanitize(html);
+                const renderer = new marked.Renderer();
+                const linkRenderer = renderer.link;
+                renderer.link = (href, title, text) => {
+                    const html = linkRenderer.call(renderer, href, title, text);
+                    return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+                };
+
+                const html = marked.parse(text, { breaks: true, renderer });
+                return DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
             } catch (e) {
                 console.error('Markdown parsing error:', e);
                 return text;
