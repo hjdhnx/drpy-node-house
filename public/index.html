@@ -448,7 +448,7 @@
                 <!-- Forum Sidebar (Categories/Tags - Future) -->
                 <div v-if="currentView === 'forum'" class="glass-panel rounded-2xl shadow-sm p-4">
                      <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{{ t.forum }}</h3>
-                     <p class="text-sm text-gray-600">欢迎来到社区论坛！请遵守社区规范。</p>
+                     <p class="text-sm text-gray-600">{{ siteInfo.welcome || '欢迎来到社区论坛！请遵守社区规范。' }}</p>
                 </div>
 
                  <!-- Chat Sidebar (Online Users) -->
@@ -1556,35 +1556,42 @@
 
         <!-- Auth Modals -->
         <div v-if="showLogin || showRegister" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
-            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all scale-100 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all scale-100 relative overflow-hidden" @click.stop>
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-purple-600"></div>
                 
-                <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">{{ showLogin ? t.loginTitle : t.registerTitle }}</h2>
+                <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 pt-5">
+                    <h2 class="text-lg font-bold text-gray-800 tracking-tight">{{ showLogin ? t.loginTitle : t.registerTitle }}</h2>
+                    <button @click="showLogin = false; showRegister = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
                 
-                <form @submit.prevent="showLogin ? login() : register()" class="space-y-4">
-                    <div v-if="!showLogin && registrationPolicy === 'closed'" class="p-4 bg-red-50 text-red-600 rounded-xl text-center">
+                <form @submit.prevent="showLogin ? login() : register()" class="p-4 space-y-3">
+                    <div v-if="!showLogin && registrationPolicy === 'closed'" class="p-3 bg-red-50 text-red-600 rounded-lg text-center text-sm">
                         <p class="font-medium">当前注册已关闭</p>
-                        <p class="text-sm mt-1">请联系管理员获取更多信息。</p>
+                        <p class="text-xs mt-0.5">请联系管理员获取更多信息。</p>
                     </div>
 
                     <template v-else>
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.username }}</label>
+                            <label class="block text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{{ t.username }}</label>
                             <div class="relative">
-                                <input v-model="authForm.username" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
-                                <button type="button" v-if="authForm.username" @click="authForm.username = ''" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <input v-model="authForm.username" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white text-sm" required>
+                                <button type="button" v-if="authForm.username" @click="authForm.username = ''" class="absolute inset-y-0 right-0 px-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.password }}</label>
+                            <label class="block text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{{ t.password }}</label>
                             <div class="relative">
-                                <input v-model="authForm.password" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" required>
-                                <button type="button" v-if="authForm.password" @click="authForm.password = ''" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <input v-model="authForm.password" type="password" class="w-full border border-gray-200 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white text-sm" required>
+                                <button type="button" v-if="authForm.password" @click="authForm.password = ''" class="absolute inset-y-0 right-0 px-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
@@ -1592,11 +1599,11 @@
                         </div>
                         
                         <div v-if="!showLogin && registrationPolicy === 'invite'">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">邀请码 <span class="text-red-500">*</span></label>
+                            <label class="block text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">邀请码 <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input v-model="authForm.inviteCode" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white" placeholder="请输入邀请码" required>
-                                <button type="button" v-if="authForm.inviteCode" @click="authForm.inviteCode = ''" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <input v-model="authForm.inviteCode" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white text-sm" placeholder="请输入邀请码" required>
+                                <button type="button" v-if="authForm.inviteCode" @click="authForm.inviteCode = ''" class="absolute inset-y-0 right-0 px-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
@@ -1604,28 +1611,28 @@
                         </div>
 
                         <div v-if="!showLogin && registrationPolicy === 'approval'">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">{{ t.reason }} <span class="text-red-500">*</span></label>
+                            <label class="block text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{{ t.reason }} <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <textarea v-model="authForm.reason" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white resize-none h-24" :placeholder="t.reasonPlaceholder" required></textarea>
+                                <textarea v-model="authForm.reason" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 focus:bg-white resize-none h-20 text-sm" :placeholder="t.reasonPlaceholder" required></textarea>
                             </div>
-                            <div class="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg mt-3">
+                            <div class="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg mt-2">
                                 <span class="font-bold">注意：</span> 注册后需要管理员审核才能登录。
                             </div>
                         </div>
                     </template>
                     
-                    <div v-if="authError" class="p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center">
+                    <div v-if="authError" class="p-2.5 bg-red-50 text-red-600 text-xs rounded-lg flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                         </svg>
                         {{ authError }}
                     </div>
                     
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button type="button" @click="showLogin = false; showRegister = false" class="px-5 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 font-medium transition-colors">
+                    <div class="flex justify-end space-x-2 pt-2 border-t border-gray-100 mt-2">
+                        <button type="button" @click="showLogin = false; showRegister = false" class="px-3 py-1.5 rounded-lg text-gray-500 hover:bg-gray-100 font-medium transition-colors text-sm">
                             {{ t.cancel }}
                         </button>
-                        <button type="submit" v-if="showLogin || registrationPolicy !== 'closed'" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all">
+                        <button type="submit" v-if="showLogin || registrationPolicy !== 'closed'" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1.5 rounded-lg font-medium shadow-md shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all text-sm">
                             {{ t.submit }}
                         </button>
                     </div>

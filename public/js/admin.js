@@ -35,6 +35,7 @@ createApp({
             anonymous_preview: 'false',
             anonymous_download: 'false',
             site_name: '',
+            site_welcome: '',
             site_copyright: '',
             site_icp: '',
             notification_limit: 10,

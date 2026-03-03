@@ -58,6 +58,7 @@ createApp({
 
         const siteInfo = ref({
             name: '',
+            welcome: '',
             copyright: '',
             icp: ''
         });
@@ -1135,6 +1136,7 @@ createApp({
                 if (data.uploadConfig) {
                     uploadConfig.value = data.uploadConfig;
                     if (data.uploadConfig.site_name) siteInfo.value.name = data.uploadConfig.site_name;
+                    if (data.uploadConfig.site_welcome) siteInfo.value.welcome = data.uploadConfig.site_welcome;
                     if (data.uploadConfig.site_copyright) siteInfo.value.copyright = data.uploadConfig.site_copyright;
                     if (data.uploadConfig.site_icp) siteInfo.value.icp = data.uploadConfig.site_icp;
                 }
