@@ -231,6 +231,15 @@ export const zh = {
     notificationSettings: '通知设置',
     settings: '通用设置',
     interfaceSettings: '界面设置',
+    // Markdown Editor
+    mdBold: '粗体',
+    mdItalic: '斜体',
+    mdCode: '代码',
+    mdLink: '链接',
+    mdEmoji: '表情',
+    mdImage: '图片',
+    mdFile: '文件',
+    mdList: '列表',
 };
 
 export const en = {
@@ -465,4 +474,13 @@ export const en = {
     notificationSettings: 'Notification Settings',
     settings: 'General Settings',
     interfaceSettings: 'Interface Settings',
+    // Markdown Editor
+    mdBold: 'Bold',
+    mdItalic: 'Italic',
+    mdCode: 'Code',
+    mdLink: 'Link',
+    mdEmoji: 'Emoji',
+    mdImage: 'Image',
+    mdFile: 'File',
+    mdList: 'List',
 };
