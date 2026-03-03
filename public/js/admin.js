@@ -265,14 +265,15 @@ createApp({
         };
 
         const updateUserRole = async (id, role) => {
-            if (!confirm(`确定要将用户设为管理员吗？`)) return;
+            const confirmText = role === 'admin' ? '确定要将用户设为管理员吗？' : '确定要取消该用户的管理员权限吗？';
+            if (!confirm(confirmText)) return;
             try {
                 const res = await fetchWithAuth(`/api/admin/users/${id}`, {
                     method: 'PUT',
                     body: JSON.stringify({ role })
                 });
                 if (res.ok) {
-                    showNotification('用户角色已更新');
+                    showNotification(role === 'admin' ? '已设为管理员' : '已取消管理员权限');
                     fetchUsers();
                 } else {
                     showNotification('更新失败', 'error');
