@@ -30,7 +30,7 @@ export default async function (fastify, opts) {
       }
 
       // Generate token (Allow login even if pending)
-      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role, status: user.status });
+      const token = fastify.jwt.sign({ id: user.id, username: user.username, nickname: user.nickname, role: user.role, status: user.status });
       return { user, token };
     } catch (err) {
       if (err.message === 'Username already exists') {
@@ -59,7 +59,7 @@ export default async function (fastify, opts) {
 
     try {
       const user = await loginUser(username, password);
-      const token = fastify.jwt.sign({ id: user.id, username: user.username, role: user.role, status: user.status });
+      const token = fastify.jwt.sign({ id: user.id, username: user.username, nickname: user.nickname, role: user.role, status: user.status });
       return { user, token };
     } catch (err) {
       if (err.message === 'Invalid username or password' || err.message === 'Account is banned') {

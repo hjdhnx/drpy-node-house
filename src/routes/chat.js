@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { getUserById } from '../services/authService.js';
 
 const clients = new Set();
 
@@ -50,7 +51,11 @@ export default async function chatRoutes(fastify, options) {
         // For simplicity, let's assume the client sends a token in the 'auth' message type
         if (data.type === 'auth') {
           try {
-            const user = fastify.jwt.verify(data.token);
+            const decoded = fastify.jwt.verify(data.token);
+            // Fetch fresh user info from DB to ensure nickname is up to date
+            const user = await getUserById(decoded.id);
+            if (!user) throw new Error('User not found');
+            
             connection.user = user;
             // Broadcast user join?
             broadcast({ type: 'system', message: `${user.username} joined.` });

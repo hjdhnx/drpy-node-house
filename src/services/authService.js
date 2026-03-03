@@ -129,7 +129,7 @@ export async function loginUser(username, password) {
   //   throw new Error('Account is pending approval');
   // }
 
-  return { id: user.id, username: user.username, role: user.role, status: user.status };
+  return { id: user.id, username: user.username, nickname: user.nickname, role: user.role, status: user.status };
 }
 
 export async function changePassword(userId, oldPassword, newPassword) {
