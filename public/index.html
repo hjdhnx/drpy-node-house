@@ -1141,7 +1141,7 @@
         </div> <!-- End of animate-fade-in wrapper -->
 
         <!-- Mobile Scroll Shortcuts -->
-        <div class="fixed top-1/2 -translate-y-1/2 right-0 flex flex-col gap-3 z-40 lg:hidden pointer-events-none">
+        <div class="fixed top-1/2 -translate-y-1/2 right-0 flex flex-col gap-3 z-40 lg:hidden pointer-events-none" v-if="user && user.show_scroll_buttons">
             <button @click="scrollToTop" class="pointer-events-auto p-2 pl-3 pr-2 bg-white/60 backdrop-blur-md border border-gray-200/50 border-r-0 shadow-md rounded-l-full rounded-r-none text-gray-600 hover:text-blue-600 active:scale-95 transition-all opacity-70 hover:opacity-100 hover:bg-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
