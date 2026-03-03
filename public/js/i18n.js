@@ -229,6 +229,8 @@ export const zh = {
     notifyOnReply: '收到回复时通知',
     notifyOnComment: '话题被评论时通知',
     notificationSettings: '通知设置',
+    settings: '通用设置',
+    interfaceSettings: '界面设置',
 };
 
 export const en = {
@@ -461,4 +463,6 @@ export const en = {
     notifyOnReply: 'Notify on new reply',
     notifyOnComment: 'Notify on topic comment',
     notificationSettings: 'Notification Settings',
+    settings: 'General Settings',
+    interfaceSettings: 'Interface Settings',
 };

@@ -1571,7 +1571,8 @@ createApp({
                 phone: user.value.phone || '',
                 download_preference: user.value.download_preference || 'default',
                 notify_on_reply: user.value.notify_on_reply !== 0,
-                notify_on_comment: user.value.notify_on_comment !== 0
+                notify_on_comment: user.value.notify_on_comment !== 0,
+                show_scroll_buttons: user.value.show_scroll_buttons === 1
             };
             profileError.value = '';
             showProfileModal.value = true;
@@ -1589,6 +1590,7 @@ createApp({
                 if (userProfileForm.value.download_preference !== undefined) payload.download_preference = userProfileForm.value.download_preference;
                 payload.notify_on_reply = userProfileForm.value.notify_on_reply ? 1 : 0;
                 payload.notify_on_comment = userProfileForm.value.notify_on_comment ? 1 : 0;
+                payload.show_scroll_buttons = userProfileForm.value.show_scroll_buttons ? 1 : 0;
 
                 const res = await fetchWithAuth('/api/auth/me', {
                     method: 'PUT',

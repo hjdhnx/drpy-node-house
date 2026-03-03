@@ -152,12 +152,12 @@ export async function changePassword(userId, oldPassword, newPassword) {
 }
 
 export async function getUserById(userId) {
-  const stmt = db.prepare('SELECT id, username, role, status, nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment FROM users WHERE id = ?');
+  const stmt = db.prepare('SELECT id, username, role, status, nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment, show_scroll_buttons FROM users WHERE id = ?');
   return stmt.get(userId);
 }
 
-export async function updateUserProfile(userId, { nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment }) {
-  console.log(`[updateUserProfile] Updating user ${userId}:`, { nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment });
+export async function updateUserProfile(userId, { nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment, show_scroll_buttons }) {
+  console.log(`[updateUserProfile] Updating user ${userId}:`, { nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment, show_scroll_buttons });
 
   // Check nickname uniqueness if changed
   if (nickname) {
@@ -177,6 +177,7 @@ export async function updateUserProfile(userId, { nickname, qq, email, phone, do
   if (download_preference !== undefined) { updates.push('download_preference = ?'); params.push(download_preference); }
   if (notify_on_reply !== undefined) { updates.push('notify_on_reply = ?'); params.push(notify_on_reply); }
   if (notify_on_comment !== undefined) { updates.push('notify_on_comment = ?'); params.push(notify_on_comment); }
+  if (show_scroll_buttons !== undefined) { updates.push('show_scroll_buttons = ?'); params.push(show_scroll_buttons); }
 
   console.log('[updateUserProfile] SQL Updates:', updates);
   console.log('[updateUserProfile] SQL Params:', params);
