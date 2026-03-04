@@ -16,12 +16,14 @@ import adminRoutes from './routes/admin.js';
 import notificationRoutes from './routes/notifications.js';
 import forumRoutes from './routes/forum.js';
 import chatRoutes from './routes/chat.js';
+import userRoutes from './routes/users.js';
 import { readFileSync } from 'fs';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
 
 const fastify = Fastify({
-  logger: true
+  logger: true,
+  trustProxy: true // Trust proxy headers (X-Forwarded-For) for correct IP detection behind Nginx/Caddy
 });
 
 // Register plugins
@@ -77,6 +79,7 @@ fastify.register(adminRoutes, { prefix: '/api/admin' });
 fastify.register(notificationRoutes, { prefix: '/api/notifications' });
 fastify.register(forumRoutes, { prefix: '/api/forum' });
 fastify.register(chatRoutes, { prefix: '/ws' });
+fastify.register(userRoutes, { prefix: '/api/users' });
 
 // Initialize services before starting
 fastify.addHook('onReady', async () => {

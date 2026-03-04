@@ -84,8 +84,12 @@ export function listFiles(userId = null, page = 1, limit = 10, search = '', tag 
   }
 
   if (tag) {
-    whereClause += ' AND tags LIKE ?';
-    params.push(`%${tag}%`);
+    const tags = tag.split(',').map(t => t.trim()).filter(t => t);
+    if (tags.length > 0) {
+      const tagConditions = tags.map(() => 'tags LIKE ?').join(' OR ');
+      whereClause += ` AND (${tagConditions})`;
+      tags.forEach(t => params.push(`%${t}%`));
+    }
   } else {
     // Exclude hidden files by default if no tag is specified
     whereClause += " AND (tags IS NULL OR tags NOT LIKE '%chat-image%')";

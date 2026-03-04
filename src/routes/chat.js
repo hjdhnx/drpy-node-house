@@ -2,6 +2,7 @@ import db from '../db.js';
 import { getUserById } from '../services/authService.js';
 import { DEFAULT_SETTINGS } from '../config.js';
 import { getRank } from '../services/pointsService.js';
+import { processMentions } from '../services/notificationService.js';
 
 const clients = new Set();
 
@@ -158,6 +159,9 @@ export default async function chatRoutes(fastify, options) {
             // Save to DB
             const stmt = db.prepare('INSERT INTO chat_messages (user_id, content, room) VALUES (?, ?, ?)');
             const result = stmt.run(connection.user.id, content, 'general');
+            
+            // Process Mentions
+            processMentions(content, connection.user.id, 'chat', result.lastInsertRowid, '/index.html?view=chat');
             
             // Broadcast to all
             const msgObj = {

@@ -110,7 +110,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div id="app" v-cloak class="container mx-auto px-2 py-2 max-w-6xl relative flex flex-col lg:h-screen lg:p-4 lg:block" :class="{'fixed inset-0 z-0 h-dvh flex flex-col overflow-hidden lg:static lg:h-auto lg:block lg:overflow-visible': currentView !== 'files'}">
+    <div id="app" v-cloak class="container mx-auto px-2 py-2 max-w-6xl relative flex flex-col lg:h-screen lg:p-4" :class="{'fixed inset-0 z-0 h-dvh flex flex-col overflow-hidden lg:static lg:h-screen lg:overflow-hidden': currentView !== 'files'}">
         <!-- Global Loading State -->
         <div v-if="!isAppReady" class="fixed inset-0 flex items-center justify-center z-50">
             <div class="flex flex-col items-center">
@@ -122,8 +122,8 @@
         </div>
 
         <!-- Main Content -->
-        <div v-else class="h-full flex flex-col lg:block">
-            <div class="flex flex-col h-full animate-fade-in">
+        <div v-else class="h-full min-h-0 flex flex-col">
+            <div class="flex flex-col h-full min-h-0 animate-fade-in">
                 <!-- Sticky Header Wrapper -->
                 <div class="sticky top-0 z-50 space-y-2 mb-2">
                 <!-- Navbar -->
@@ -489,7 +489,7 @@
                     <div class="flex-1 overflow-y-auto space-y-2">
                         <!-- Online users list -->
                         <div v-for="u in onlineUsers" :key="u.id" class="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
-                            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
+                            <div @click.stop="openPublicProfile(u)" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all">
                                 {{ (u.nickname || u.username || 'A')[0].toUpperCase() }}
                             </div>
                             <div>
@@ -535,29 +535,51 @@
         <!-- File List -->
             <div v-if="currentView === 'files'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex-1 min-h-0 flex flex-col lg:h-full">
                 <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
-                    <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-white/50 file-list-header flex-shrink-0 gap-4 md:gap-0">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center w-full md:w-auto justify-center md:justify-start">
+                    <div class="p-2 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-white/50 file-list-header flex-shrink-0 gap-2 md:gap-0">
+                        <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center w-full md:w-auto justify-center md:justify-start">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             {{ t.filesTitle }}
                         </h2>
                         
-                        <div class="grid grid-cols-12 gap-2 w-full md:flex md:w-auto md:items-center md:justify-end md:gap-3">
-                            <!-- Tag Filter -->
+                        <div class="grid grid-cols-12 gap-2 w-full md:flex md:w-auto md:items-center md:justify-end md:gap-2">
+                            <!-- Tag Filter (Multi-select) -->
                             <div class="col-span-5 md:w-auto relative group" v-if="allowedTags.length > 0">
-                                <select 
-                                    v-model="filterTag" 
-                                    @change="handleFilterTag"
-                                    class="appearance-none bg-none pl-3 pr-8 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all cursor-pointer w-full"
+                                <button 
+                                    @click="showFilterTagDropdown = !showFilterTagDropdown" 
+                                    class="flex items-center justify-between w-full md:w-40 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer hover:bg-white"
                                 >
-                                    <option value="">{{ t.allTags || 'All Tags' }}</option>
-                                    <option v-for="tag in allowedTags" :key="tag" :value="tag">{{ tag }}</option>
-                                    <option value="chat-image" v-if="user && (user.role === 'admin' || user.role === 'super_admin')">聊天图片 (Hidden)</option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                    <span class="truncate block text-left" :class="filterTags.length === 0 ? 'text-gray-500' : 'text-gray-800'">
+                                        {{ filterTags.length === 0 ? (t.allTags || 'All Tags') : filterTags.join(', ') }}
+                                    </span>
+                                    <svg class="w-3 h-3 ml-1 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                
+                                <!-- Dropdown -->
+                                <div v-if="showFilterTagDropdown" class="absolute top-full left-0 mt-1 w-full md:w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-2">
+                                    <label class="flex items-center px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input type="checkbox" :checked="filterTags.length === 0" @change="toggleFilterTag('all')" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                        <span class="text-sm text-gray-700">{{ t.allTags || 'All Tags' }}</span>
+                                    </label>
+                                    <div class="h-px bg-gray-100 my-1"></div>
+                                    <label v-for="tag in allowedTags" :key="tag" class="flex items-center px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input type="checkbox" :value="tag" :checked="filterTags.includes(tag)" @change="toggleFilterTag(tag)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                        <span class="text-sm text-gray-700">{{ tag }}</span>
+                                    </label>
+                                    <template v-if="user && (user.role === 'admin' || user.role === 'super_admin')">
+                                        <div class="h-px bg-gray-100 my-1"></div>
+                                        <label class="flex items-center px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                                            <input type="checkbox" value="chat-image" :checked="filterTags.includes('chat-image')" @change="toggleFilterTag('chat-image')" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                            <span class="text-sm text-gray-700">聊天图片 (Hidden)</span>
+                                        </label>
+                                    </template>
                                 </div>
+                                
+                                <!-- Overlay to close -->
+                                <div v-if="showFilterTagDropdown" @click="showFilterTagDropdown = false" class="fixed inset-0 z-40 cursor-default"></div>
                             </div>
 
                             <!-- Search Box -->
@@ -633,25 +655,29 @@
                         <table class="min-w-full divide-y divide-gray-100 relative">
                             <thead class="bg-gray-50/95 sticky top-0 z-20 backdrop-blur-sm shadow-sm">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileName }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileSize }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.owner }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileVisibility }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.tags }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.uploadDate }}</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)]">{{ t.actions }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 shadow-[5px_0_10px_-5px_rgba(0,0,0,0.05)] w-12">#</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileName }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.tags }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileSize }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.owner }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileVisibility }}</th>
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.uploadDate }}</th>
+                                    <th class="px-2 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)]">{{ t.actions }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white/30">
-                                <tr v-for="file in files" :key="file.id" class="hover:bg-blue-50/30 transition-colors group">
-                                    <td class="px-4 py-3">
+                                <tr v-for="(file, index) in files" :key="file.id" class="hover:bg-blue-50/30 transition-colors group">
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500 sticky left-0 bg-white/95 group-hover:bg-blue-50/95 z-10 shadow-[5px_0_10px_-5px_rgba(0,0,0,0.05)] font-mono text-center">
+                                        {{ (currentPage - 1) * itemsPerPage + index + 1 }}
+                                    </td>
+                                    <td class="px-2 py-3">
                                         <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center">
+                                            <div class="hidden md:flex flex-shrink-0 h-10 w-10 bg-indigo-50 text-indigo-500 rounded-lg items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                             </div>
-                                            <div class="ml-4">
+                                            <div class="md:ml-4">
                                                 <div class="text-sm font-medium text-gray-900 max-w-[200px] truncate" :title="file.filename">{{ file.filename }}</div>
                                                 <div class="text-xs text-gray-400 font-mono mt-0.5 flex items-center cursor-pointer hover:text-blue-500" @click="copyToClipboard(file.cid)" :title="t.copyCID">
                                                     {{ truncate(file.cid, 12) }}
@@ -663,33 +689,33 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                                        {{ formatSize(file.size) }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="h-6 w-6 rounded-full bg-gradient-to-r from-pink-400 to-red-400 flex items-center justify-center text-white text-xs font-bold">
-                                                {{ (file.nickname || file.username || 'A')[0].toUpperCase() }}
-                                            </div>
-                                            <span class="text-sm text-gray-600">{{ file.nickname || file.username || t.anonymous }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <span :class="file.is_public ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'" class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full border">
-                                            {{ file.is_public ? t.publicLabel : t.privateLabel }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-2 py-3">
                                         <div class="flex flex-wrap gap-1 max-w-[150px]">
                                             <span v-for="tag in (file.tags ? file.tags.split(',') : [])" :key="tag" class="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded border border-blue-100">
                                                 {{ tag }}
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-600">
+                                        {{ formatSize(file.size) }}
+                                    </td>
+                                    <td class="px-2 py-3 whitespace-nowrap">
+                                        <div class="flex items-center space-x-2">
+                                            <div @click.stop="openPublicProfile(file)" class="h-6 w-6 rounded-full bg-gradient-to-r from-pink-400 to-red-400 flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:ring-2 hover:ring-pink-400 transition-all">
+                                                {{ (file.nickname || file.username || 'A')[0].toUpperCase() }}
+                                            </div>
+                                            <span class="text-sm text-gray-600">{{ file.nickname || file.username || t.anonymous }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-3 whitespace-nowrap">
+                                        <span :class="file.is_public ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'" class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full border">
+                                            {{ file.is_public ? t.publicLabel : t.privateLabel }}
+                                        </span>
+                                    </td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
                                         {{ formatDate(file.created_at) }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/90 backdrop-blur-sm shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)] z-10 group-hover:bg-blue-50/90 transition-colors">
+                                    <td class="px-2 py-3 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/90 backdrop-blur-sm shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)] z-10 group-hover:bg-blue-50/90 transition-colors">
                                         <div class="flex items-center justify-end space-x-3 opacity-60 group-hover:opacity-100 transition-opacity">
                                             <a v-if="canPreview" :href="getDownloadUrl(file.cid, true)" target="_blank" class="text-teal-600 hover:text-teal-800 transition-colors" :title="t.preview">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -755,16 +781,38 @@
                 </div>
             </div>
             <!-- Forum View -->
-            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col gap-4 flex-1 min-h-0 relative">
+            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden overflow-hidden flex flex-col gap-4 flex-1 min-h-0 relative">
                 <div v-if="!currentTopic" class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full lg:w-auto lg:h-full">
-                    <div class="p-4 border-b border-gray-100 flex flex-wrap gap-2 justify-between items-center bg-white/50 flex-shrink-0">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                            </svg>
-                            {{ t.topics }}
-                        </h2>
-                        <div class="flex items-center gap-2">
+                    <div class="p-4 border-b border-gray-100 bg-white/50 flex-shrink-0 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                        <div class="flex items-center w-full lg:w-auto min-w-0">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center min-w-0 mr-auto lg:mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                                </svg>
+                                <span class="truncate">{{ t.topics }}</span>
+                            </h2>
+                            <button v-if="user" @click="openCreateTopic" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg shadow-purple-500/20 transition-all flex items-center whitespace-nowrap flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span class="hidden sm:inline">{{ t.newTopic }}</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 w-full lg:flex-1 lg:min-w-0 lg:justify-end overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+                            <!-- Search -->
+                            <div class="relative group">
+                                <input 
+                                    v-model.lazy="forumSearchQuery" 
+                                    @keyup.enter="fetchTopics(1)"
+                                    type="text" 
+                                    :placeholder="t.search" 
+                                    class="w-8 focus:w-32 sm:w-40 sm:focus:w-48 lg:w-48 lg:focus:w-52 bg-gray-100/80 focus:bg-white border-none rounded-lg py-1 pl-8 pr-2 text-sm transition-all duration-300 outline-none placeholder-transparent focus:placeholder-gray-400 focus:shadow-sm focus:ring-1 focus:ring-purple-200"
+                                >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+
                             <!-- Sort Group -->
                             <div class="flex bg-gray-100/80 rounded-lg p-1 gap-1">
                                 <button @click="handleForumSort('newest')" :class="forumSort === 'newest' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="p-1 rounded-md transition-all" :title="t.sortNewest">
@@ -815,13 +863,6 @@
                                     </svg>
                                 </button>
                             </div>
-
-                            <button v-if="user" @click="openCreateTopic" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg shadow-purple-500/20 transition-all flex items-center whitespace-nowrap ml-auto lg:ml-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                <span class="hidden sm:inline">{{ t.newTopic }}</span>
-                            </button>
                         </div>
                     </div>
 
@@ -834,19 +875,27 @@
                         </div>
                         <div v-else class="space-y-3">
                             <div v-for="topic in topics" :key="topic.id" 
-                                class="p-4 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all cursor-pointer group relative"
+                                class="p-3 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all cursor-pointer group relative"
                                 @click="openTopic(topic.id)">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1 min-w-0 mr-4">
-                                        <h3 class="text-base font-bold text-gray-800 mb-1.5 group-hover:text-purple-600 transition-colors truncate">
-                                            <span v-if="topic.is_pinned" class="inline-block px-1.5 py-0.5 bg-red-100 text-red-600 text-xs rounded mr-2">{{ t.pinned }}</span>
-                                            <span v-if="topic.bounty_points > 0" class="inline-block px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded mr-2 font-bold flex-inline items-center gap-1">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex flex-wrap items-center gap-1.5 min-w-0 pr-2">
+                                            <span v-if="topic.is_pinned" class="inline-block px-1.5 py-0.5 bg-red-100 text-red-600 text-xs rounded">{{ t.pinned }}</span>
+                                            <span v-if="topic.is_featured" class="inline-block px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded font-bold border border-purple-200">⭐ {{ t.featured }}</span>
+                                            <span v-if="topic.bounty_points > 0" class="inline-flex px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded font-bold items-center gap-1">
                                                 <span>💰</span>{{ topic.bounty_points }}
                                             </span>
-                                            <span v-if="topic.is_solved" class="inline-block px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded mr-2 font-bold">{{ t.solved }}</span>
-                                            <span v-if="topic.view_permission_level > 0 || topic.view_points_required > 0" class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded mr-2" title="Restricted">🔒</span>
-                                            {{ topic.title }}
-                                        </h3>
+                                            <span v-if="topic.is_solved" class="inline-block px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded font-bold">{{ t.solved }}</span>
+                                            <span v-if="topic.view_permission_level > 0 || topic.view_points_required > 0" class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded" title="Restricted">🔒</span>
+                                        </div>
+                                        <div class="flex-shrink-0 text-xs text-gray-400 whitespace-nowrap self-start mt-0.5">
+                                            {{ formatDate(topic.created_at) }}
+                                        </div>
+                                    </div>
+                                    <h3 class="text-sm md:text-[15px] font-semibold text-gray-800 group-hover:text-purple-600 transition-colors break-words w-full leading-snug">
+                                        {{ truncate(topic.title, 80) }}
+                                    </h3>
+                                    <div class="flex-1 min-w-0 grid grid-cols-1">
                                         <div class="flex items-center text-xs text-gray-400 space-x-3">
                                             <span class="flex items-center whitespace-nowrap">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -870,9 +919,6 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="flex-shrink-0 text-xs text-gray-400 whitespace-nowrap self-start mt-1">
-                                        {{ formatDate(topic.created_at) }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -880,21 +926,33 @@
                     
                     <!-- Pagination -->
                     <div class="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-center" v-if="forumTotalPages > 1">
-                         <div class="flex items-center space-x-2">
+                         <div class="flex items-center space-x-1">
                             <button 
                                 @click="fetchTopics(forumPage - 1)" 
                                 :disabled="forumPage === 1"
-                                class="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                                class="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
                             </button>
-                            <span class="text-sm text-gray-600">{{ forumPage }} / {{ forumTotalPages }}</span>
+                            
+                            <template v-for="(p, i) in visibleForumPages" :key="i">
+                                <span v-if="p === '...'" class="px-2 text-gray-400 font-medium">...</span>
+                                <button 
+                                    v-else
+                                    @click="fetchTopics(p)"
+                                    class="w-8 h-8 rounded-lg text-sm font-medium transition-colors"
+                                    :class="p === forumPage ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'"
+                                >
+                                    {{ p }}
+                                </button>
+                            </template>
+
                             <button 
                                 @click="fetchTopics(forumPage + 1)" 
                                 :disabled="forumPage === forumTotalPages"
-                                class="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                                class="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -905,70 +963,71 @@
                 </div>
 
                 <!-- Topic Detail -->
-                <div v-else class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full lg:w-auto lg:h-full">
-                    <div class="p-4 border-b border-gray-100 flex items-center bg-white/50 flex-shrink-0">
-                        <button @click="closeTopic()" class="mr-4 p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                        </button>
-                        <h2 class="text-lg font-bold text-gray-800 truncate flex-1">{{ currentTopic.topic.title }}</h2>
-                        
-                        <!-- Topic Actions -->
-                        <div class="flex items-center space-x-1">
+                <div v-else class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full min-h-0 w-full lg:h-full">
+                    <div class="p-3 border-b border-gray-100 flex flex-col bg-white/50 flex-shrink-0">
+                        <div class="flex items-start justify-between gap-2.5">
+                            <div class="flex items-center min-w-0">
+                                <button @click="closeTopic()" class="mr-1.5 p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                    </svg>
+                                </button>
+                                <div class="min-w-0 flex items-center gap-1.5">
+                                    <div @click.stop="openPublicProfile(currentTopic.topic)" class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-purple-500/30 cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all flex-shrink-0">
+                                        {{ (currentTopic.topic.nickname || currentTopic.topic.username || 'A')[0].toUpperCase() }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-gray-800 text-sm truncate">
+                                            <span class="text-[10px] text-yellow-600 bg-yellow-50 border border-yellow-100 px-1 py-0.5 rounded mr-1 font-normal" v-if="currentTopic.topic.rankLevel !== undefined">{{ t.ranks[currentTopic.topic.rankLevel] || t.unranked }}</span>
+                                            {{ currentTopic.topic.nickname || currentTopic.topic.username }}
+                                        </div>
+                                        <div class="text-[10px] text-gray-500">{{ formatDate(currentTopic.topic.created_at) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-0.5 flex-shrink-0">
                              <button v-if="user && (user.role === 'admin' || user.role === 'super_admin')" 
                                 @click="togglePin(currentTopic.topic.id, currentTopic.topic.is_pinned)" 
-                                class="p-2 rounded-lg transition-colors"
+                                class="p-1.5 rounded-lg transition-colors"
                                 :class="currentTopic.topic.is_pinned ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-gray-400 hover:bg-gray-100 hover:text-red-500'"
                                 :title="currentTopic.topic.is_pinned ? t.unpin : t.pin">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :fill="currentTopic.topic.is_pinned ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :fill="currentTopic.topic.is_pinned ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                 </svg>
                             </button>
                             <button v-if="user && (user.role === 'admin' || user.role === 'super_admin')" 
                                 @click="toggleFeature(currentTopic.topic.id, currentTopic.topic.is_featured)" 
-                                class="p-2 rounded-lg transition-colors"
+                                class="p-1.5 rounded-lg transition-colors"
                                 :class="currentTopic.topic.is_featured ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100' : 'text-gray-400 hover:bg-gray-100 hover:text-yellow-500'"
                                 :title="currentTopic.topic.is_featured ? t.unfeature : t.feature">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :fill="currentTopic.topic.is_featured ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :fill="currentTopic.topic.is_featured ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                                 </svg>
                             </button>
                             <button v-if="user && (user.role === 'admin' || user.role === 'super_admin' || user.id === currentTopic.topic.user_id)" 
                                 @click="openEditTopic(currentTopic.topic)" 
-                                class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                                class="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
                                 :title="t.editTopic">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
                             <button v-if="user && (user.role === 'admin' || user.role === 'super_admin' || user.id === currentTopic.topic.user_id)" 
                                 @click="deleteTopic(currentTopic.topic.id)" 
-                                class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                                 :title="t.deleteTopic">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
                         </div>
                     </div>
                     
-                    <div id="forum-detail-container" ref="forumDetailContainer" class="flex-1 overflow-y-auto p-6 scrollable-column scroll-smooth">
+                    <div id="forum-detail-container" ref="forumDetailContainer" class="flex-1 min-h-0 overflow-y-auto p-3 scroll-smooth">
+                        <h2 class="text-base md:text-lg font-semibold text-gray-800 mb-3 leading-snug break-words">{{ currentTopic.topic.title }}</h2>
                         <!-- Main Post -->
-                        <div class="mb-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
-                                    {{ (currentTopic.topic.nickname || currentTopic.topic.username || 'A')[0].toUpperCase() }}
-                                </div>
-                                <div class="ml-3">
-                                    <div class="font-bold text-gray-800">
-                                        <span class="text-xs text-yellow-600 bg-yellow-50 border border-yellow-100 px-1.5 py-0.5 rounded mr-1 font-normal" v-if="currentTopic.topic.rankLevel !== undefined">{{ t.ranks[currentTopic.topic.rankLevel] || t.unranked }}</span>
-                                        {{ currentTopic.topic.nickname || currentTopic.topic.username }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">{{ formatDate(currentTopic.topic.created_at) }}</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 mb-4">
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 mb-2">
                                 <span v-if="currentTopic.topic.bounty_points > 0" class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-bold flex items-center gap-1 border border-yellow-200">
                                     <span>💰</span> {{ currentTopic.topic.bounty_points }}
                                 </span>
@@ -993,7 +1052,7 @@
                                     {{ t.minRank }}: {{ t.ranks[currentTopic.topic.view_permission_level] || currentTopic.topic.view_permission_level }}
                                 </div>
 
-                                <button v-if="currentTopic.topic.deny_reason === 'purchase_required'" 
+                                <button v-if="currentTopic.topic.deny_reason === 'purchaseRequired'"
                                     @click="purchaseTopic(currentTopic.topic.id, currentTopic.topic.view_points_required)"
                                     :disabled="user && user.points < currentTopic.topic.view_points_required"
                                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
@@ -1006,25 +1065,25 @@
                                     {{ t.loginToView || t.login }}
                                 </button>
                             </div>
-                            <div v-else class="prose prose-blue max-w-none text-gray-700 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100" v-html="renderMarkdown(currentTopic.topic.content)"></div>
+                            <div v-else class="prose prose-sm prose-blue max-w-none text-[13px] text-gray-700 leading-relaxed bg-gray-50/50 p-2.5 rounded-xl border border-gray-100" v-html="renderMarkdown(currentTopic.topic.content)"></div>
                         </div>
                         
                         <!-- Comments -->
-                        <div class="space-y-6">
-                            <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                 </svg>
                                 {{ t.comments }} ({{ currentTopic.comments.length }})
                             </h3>
                             
-                            <div v-for="(comment, index) in currentTopic.comments" :key="comment.id" class="flex gap-4 group">
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold">
+                            <div v-for="(comment, index) in currentTopic.comments" :key="comment.id" class="flex gap-2.5 group">
+                                <div @click.stop="openPublicProfile(comment)" class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold cursor-pointer hover:ring-2 hover:ring-gray-400 transition-all">
                                     {{ (comment.nickname || comment.username || 'A')[0].toUpperCase() }}
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="bg-gray-50 rounded-2xl rounded-tl-none p-3 relative">
-                                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-100 border-dashed">
+                                    <div class="bg-gray-50 rounded-2xl rounded-tl-none p-2.5 relative">
+                                        <div class="flex justify-between items-center mb-1.5 pb-1.5 border-b border-gray-100 border-dashed">
                                             <div class="flex items-center gap-3">
                                                 <span class="text-xs text-purple-500 font-mono bg-purple-50 px-2 py-0.5 rounded font-bold">#{{ index + 1 }}</span>
                                                 <span class="text-xs text-gray-400">{{ formatDate(comment.created_at) }}</span>
@@ -1032,7 +1091,7 @@
                                             <div class="flex items-center gap-1">
                                                 <button v-if="user" @click.stop="replyToComment(comment)" class="text-gray-400 hover:text-purple-600 transition-all p-1.5 rounded hover:bg-purple-50" :title="t.reply">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                                     </svg>
                                                 </button>
                                                 <button v-if="user && (user.role === 'admin' || user.role === 'super_admin' || user.id == comment.user_id || user.id == currentTopic.topic.user_id)" 
@@ -1058,11 +1117,11 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-2 mb-2">
+                                        <div class="flex items-center gap-2 mb-1.5">
                                             <span class="text-[10px] text-yellow-600 bg-yellow-50 border border-yellow-100 px-1 rounded font-normal" v-if="comment.rankLevel !== undefined">{{ t.ranks[comment.rankLevel] || t.unranked }}</span>
                                             <span class="font-bold text-sm text-gray-800">{{ comment.nickname || comment.username }}</span>
                                         </div>
-                                        <div class="text-sm text-gray-700 prose prose-sm max-w-none">
+                                        <div class="text-[13px] text-gray-700 prose prose-sm max-w-none">
                                             <div v-if="comment.parent_id" class="bg-purple-50 border-l-2 border-purple-400 p-2 mb-2 text-xs text-gray-500 rounded-r">
                                                 <div class="font-bold text-purple-600 mb-0.5">
                                                     Replying to @{{ currentTopic.comments.find(c => c.id === comment.parent_id)?.nickname || currentTopic.comments.find(c => c.id === comment.parent_id)?.username || 'Unknown' }}
@@ -1079,9 +1138,9 @@
                         </div>
                     </div>
                     
-                    <div class="p-4 border-t border-gray-100 bg-white/50" v-if="user">
-                        <div v-if="replyingToComment" class="flex justify-between items-center mb-2 px-3 py-2 bg-purple-50 border border-purple-100 rounded-lg">
-                            <div class="text-sm text-gray-600 truncate max-w-[80%]">
+                    <div class="p-3 border-t border-gray-100 bg-white/50 flex-shrink-0" v-if="user">
+                        <div v-if="replyingToComment" class="flex justify-between items-center mb-2 px-2.5 py-1.5 bg-purple-50 border border-purple-100 rounded-lg">
+                            <div class="text-xs text-gray-600 truncate max-w-[80%]">
                                 <span class="font-bold text-purple-600">@{{ replyingToComment.nickname || replyingToComment.username }}</span>: {{ replyingToComment.content }}
                             </div>
                             <button @click="cancelReply" class="text-gray-400 hover:text-red-500 p-1">
@@ -1106,35 +1165,37 @@
                                 <button @click="handleMdAction('newComment', 'list', 'comment-content-input')" class="p-1 text-gray-500 hover:text-purple-600 rounded hover:bg-purple-50" :title="t.mdList || 'List'">≣</button>
                             </div>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-1.5">
                             <textarea 
                                 id="comment-content-input"
                                 v-model="newCommentContent" 
-                                class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none h-24 min-h-[48px] max-h-48" 
+                                @input="checkMention($event, 'comment')"
+                                class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none h-20 min-h-[44px] max-h-44" 
                                 :placeholder="t.reply + '... (Markdown supported)'"
                                 @keydown.ctrl.enter="submitComment"
                                 @paste="handlePaste($event, 'newComment')"
                             ></textarea>
-                            <button @click="submitComment" :disabled="isSubmittingComment" class="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl shadow-lg shadow-purple-500/20 transition-all self-end disabled:opacity-50 disabled:cursor-not-allowed">
-                                <svg v-if="isSubmittingComment" class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <button @click="submitComment" :disabled="isSubmittingComment" class="bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-xl shadow-lg shadow-purple-500/20 transition-all self-end disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg v-if="isSubmittingComment" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                 </svg>
                             </button>
                         </div>
                     </div>
-                     <div v-else class="p-4 border-t border-gray-100 bg-gray-50 text-center text-sm text-gray-500">
+                    <div v-else class="p-4 border-t border-gray-100 bg-gray-50 text-center text-sm text-gray-500">
                         {{ t.loginToPost }}
+                    </div>
                     </div>
                 </div>
             </div>
 
             <!-- Chat View -->
             <div v-if="currentView === 'chat'" class="lg:col-span-8 lg:h-full lg:overflow-hidden flex flex-col flex-1 min-h-0 relative">
-                <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full lg:w-auto lg:h-full">
+                <div class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full w-full lg:h-full">
                     <div class="p-2 border-b border-gray-100 flex justify-between items-center bg-white/50 flex-shrink-0 backdrop-blur-md z-10">
                          <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1160,7 +1221,7 @@
                                 <span class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full">{{ msg.content }}</span>
                             </div>
                             <div v-else class="flex gap-3 group" :class="{'flex-row-reverse': user && msg.user_id === user.id}">
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                                <div @click.stop="openPublicProfile(msg)" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-pointer hover:ring-2 hover:ring-opacity-50 transition-all"
                                     :class="user && msg.user_id === user.id ? 'bg-green-500' : 'bg-blue-500'">
                                     {{ (msg.nickname || msg.username || 'A')[0].toUpperCase() }}
                                 </div>
@@ -1205,6 +1266,7 @@
                             <textarea 
                                 id="chat-input"
                                 v-model="chatInput" 
+                                @input="checkMention($event, 'chat')"
                                 class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all shadow-sm resize-none h-10 max-h-24 text-sm disabled:opacity-60 disabled:cursor-not-allowed" 
                                 :placeholder="chatPlaceholder"
                                 :disabled="chatCooldown > 0"
@@ -1246,7 +1308,7 @@
             </div>
         </footer>
         </div> <!-- End of animate-fade-in wrapper -->
-
+        </div>
         <!-- Mobile Scroll Shortcuts -->
         <div class="fixed top-1/2 -translate-y-1/2 right-0 flex flex-col gap-3 z-40 lg:hidden pointer-events-none" v-if="user && user.show_scroll_buttons">
             <button @click="scrollToTop" class="pointer-events-auto p-2 pl-3 pr-2 bg-white/60 backdrop-blur-md border border-gray-200/50 border-r-0 shadow-md rounded-l-full rounded-r-none text-gray-600 hover:text-blue-600 active:scale-95 transition-all opacity-70 hover:opacity-100 hover:bg-white">
@@ -1293,6 +1355,26 @@
                 </div>
             </div>
         </transition>
+        <!-- Mention Popup -->
+        <div v-if="isMentioning && mentionCandidates.length > 0" 
+            class="fixed z-[60] bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden min-w-[200px] max-h-60 overflow-y-auto"
+            :style="mentionPopupStyle">
+            <div v-for="(user, index) in mentionCandidates" :key="user.username"
+                @click="insertMention(user)"
+                class="px-4 py-2 hover:bg-purple-50 cursor-pointer flex items-center gap-2 transition-colors border-b border-gray-50 last:border-0">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {{ (user.nickname || user.username || 'A')[0].toUpperCase() }}
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-sm font-medium text-gray-800 truncate">{{ user.nickname || user.username }}</span>
+                    <span class="text-xs text-gray-400 truncate">@{{ user.username }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overlay for closing mention popup -->
+        <div v-if="isMentioning" @click="closeMentionPopup" class="fixed inset-0 z-[55] cursor-default bg-transparent"></div>
+
         <!-- Create Topic Modal -->
         <div v-if="showCreateTopic" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 max-h-[90vh] flex flex-col">
@@ -1307,7 +1389,10 @@
                 <div class="p-4 space-y-3 overflow-y-auto">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ t.topicTitle }}</label>
-                        <input v-model="newTopicForm.title" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all text-sm" :placeholder="t.topicTitle">
+                        <div class="relative">
+                            <input v-model="newTopicForm.title" maxlength="100" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all text-sm pr-12" :placeholder="t.topicTitle">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">{{ newTopicForm.title.length }}/100</span>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex justify-between items-center">
@@ -1583,6 +1668,54 @@
                 </div>
             </div>
         </div>
+        <!-- Public Profile Modal -->
+        <transition name="fade">
+            <div v-if="showPublicProfileModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100" @click.stop>
+                    <div class="relative h-24 bg-gradient-to-br from-blue-500 to-purple-600">
+                        <button @click="closePublicProfileModal" class="absolute top-2 right-2 text-white/80 hover:text-white transition-colors p-1 bg-black/10 rounded-full z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="px-6 pb-6 relative">
+                        <div class="flex justify-center -mt-12 mb-4">
+                            <div class="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
+                                <div class="w-full h-full rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-white text-4xl font-bold select-none">
+                                    {{ (publicProfileUser.nickname || publicProfileUser.username || 'A')[0].toUpperCase() }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">{{ publicProfileUser.nickname || publicProfileUser.username }}</h3>
+                            <p class="text-sm text-gray-500 font-mono mb-2">@{{ publicProfileUser.username }}</p>
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full font-bold border border-yellow-200 shadow-sm">
+                                    {{ t.ranks[publicProfileUser.rankLevel] || t.unranked }}
+                                </span>
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-bold border border-blue-200 shadow-sm flex items-center">
+                                    <span class="mr-1">💎</span> {{ publicProfileUser.points || 0 }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-500">{{ t.registerTime || '注册时间' }}</span>
+                                <span class="font-medium text-gray-700 font-mono">{{ formatDate(publicProfileUser.created_at) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm" v-if="publicProfileUser.qq">
+                                <span class="text-gray-500">{{ t.qq }}</span>
+                                <span class="font-medium text-gray-700 font-mono select-all">{{ publicProfileUser.qq }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
         <transition name="fade">
             <div v-if="showChangePasswordModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all scale-100" @click.stop>
@@ -1682,7 +1815,7 @@
                     <div class="p-6">
                         <div class="flex flex-wrap gap-2">
                             <label 
-                                v-for="tag in allowedTags" 
+                                v-for="tag in allDisplayTags" 
                                 :key="tag" 
                                 class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border cursor-pointer transition-colors select-none"
                                 :class="selectedTags.includes(tag) ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"

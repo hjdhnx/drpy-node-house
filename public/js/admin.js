@@ -520,6 +520,7 @@ createApp({
             version,
             currentView,
             users,
+            totalUsers,
             settings,
             invites,
             notification,

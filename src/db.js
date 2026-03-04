@@ -32,6 +32,10 @@ try {
 } catch (e) {}
 
 try {
+  db.run("ALTER TABLE users ADD COLUMN notify_on_mention INTEGER DEFAULT 1");
+} catch (e) {}
+
+try {
   db.run("ALTER TABLE users ADD COLUMN show_scroll_buttons INTEGER DEFAULT 0");
 } catch (e) {}
 

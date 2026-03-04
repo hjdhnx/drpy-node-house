@@ -1,5 +1,5 @@
 import db from '../db.js';
-import { createNotification } from '../services/notificationService.js';
+import { createNotification, processMentions } from '../services/notificationService.js';
 import { addPoints, deductPoints, getUserPointsAndRank, getRank } from '../services/pointsService.js';
 
 export default async function forumRoutes(fastify, options) {
@@ -130,7 +130,7 @@ export default async function forumRoutes(fastify, options) {
 
             if (!hasPurchased) {
                 accessDenied = true;
-                denyReason = freshUser ? 'purchase_required' : 'login_required';
+                denyReason = freshUser ? 'purchaseRequired' : 'login_required';
             }
         }
 
@@ -275,6 +275,9 @@ export default async function forumRoutes(fastify, options) {
 
         const stmt = db.prepare('INSERT INTO comments (topic_id, user_id, content, parent_id) VALUES (?, ?, ?, ?)');
         const result = stmt.run(id, user_id, content, parent_id || null);
+        
+        // Process Mentions
+        processMentions(content, user_id, 'comment', result.lastInsertRowid, `/index.html?view=forum&topic=${id}`);
         
         // Award points for comment
         addPoints(user_id, 2, 'topic_reply', result.lastInsertRowid);

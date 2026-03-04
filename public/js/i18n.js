@@ -35,6 +35,7 @@ export const zh = {
     confirmLogout: '确定要退出登录吗？',
     loginTitle: '用户登录',
     registerTitle: '用户注册',
+    registerTime: '注册时间',
     username: '用户名',
     password: '密码',
     cancel: '取消',
@@ -267,11 +268,8 @@ export const zh = {
     insufficientPoints: '积分不足',
     accessDenied: '访问被拒绝',
     loginRequired: '需要登录',
-    login_required: '需要登录',
     rankTooLow: '段位不足',
-    rank_too_low: '段位不足',
     purchaseRequired: '需要购买',
-    purchase_required: '需要购买',
     ranks: ['倔强青铜', '秩序白银', '荣耀黄金', '尊贵铂金', '永恒钻石', '至尊星耀', '最强王者', '荣耀王者'],
     // New translations
     loading: '加载中...',
@@ -286,12 +284,11 @@ export const zh = {
     noOnlineUsers: '暂无其他在线用户',
     unranked: '暂无段位',
     pts: '分',
-    // loginRequired: '请重新登录', // Duplicate removed
     loadTopicFailed: '加载话题失败',
-    uploadFailed: '上传失败',
+    
     // Admin
     superAdmin: '超级管理员',
-    admin: '管理员',
+    
     // Points Reasons
     bounty_post: '发布悬赏',
     topic_post: '发布话题',
@@ -299,8 +296,8 @@ export const zh = {
     bounty_reward: '获得悬赏',
     view_pay: '支付查看',
     view_earn: '被查看收益',
-    checkin: '签到',
     checkin_bonus: '签到奖励',
+    
     // Error Codes
     topic_not_found: '话题不存在',
     topic_is_free: '话题是免费的',
@@ -611,12 +608,10 @@ export const en = {
     rankTooLow: 'Rank Too Low',
     rank_too_low: 'Rank Too Low',
     purchaseRequired: 'Purchase Required',
-    purchase_required: 'Purchase Required',
     ranks: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger'],
     // New translations
     unranked: 'Unranked',
     superAdmin: 'Super Admin',
-    admin: 'Admin',
     // Points Reasons
     bounty_post: 'Bounty Posted',
     topic_post: 'Topic Posted',
@@ -624,7 +619,6 @@ export const en = {
     bounty_reward: 'Bounty Reward',
     view_pay: 'Paid to View',
     view_earn: 'Earned from View',
-    checkin: 'Check-in',
     checkin_bonus: 'Check-in Bonus',
     // Error Codes
     loading: 'Loading...',
@@ -637,12 +631,10 @@ export const en = {
     confirmSolve: 'Are you sure you want to mark this comment as the solution?',
     purchaseFailed: 'Purchase failed',
     noOnlineUsers: 'No one else is here.',
-    unranked: 'Unranked',
     pts: 'pts',
-    loginRequired: 'Please login again',
     loadTopicFailed: 'Failed to load topic',
-    uploadFailed: 'Upload failed',
-    // Error Codes
+    
+    // API Error Codes
     topic_not_found: 'Topic not found',
     topic_is_free: 'Topic is free',
     already_purchased: 'Already purchased',

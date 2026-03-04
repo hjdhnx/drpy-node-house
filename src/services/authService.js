@@ -62,16 +62,23 @@ export async function registerUser(username, password, inviteCode = null, reason
     // Get limit from settings or default
     const settingsStmt = db.prepare("SELECT value FROM settings WHERE key = 'registration_ip_limit'");
     const settingsResult = settingsStmt.get();
-    const limit = settingsResult ? parseInt(settingsResult.value, 10) : DEFAULT_SETTINGS.registration_ip_limit;
     
-    const window = 24 * 60 * 60; // 24 hours in seconds
-    const timeThreshold = Math.floor(Date.now() / 1000) - window;
+    let limit = DEFAULT_SETTINGS.registration_ip_limit;
+    if (settingsResult && !isNaN(parseInt(settingsResult.value, 10))) {
+        limit = parseInt(settingsResult.value, 10);
+    }
     
-    const countStmt = db.prepare('SELECT count(*) as count FROM users WHERE registration_ip = ? AND created_at > ?');
-    const result = countStmt.get(ip, timeThreshold);
-    
-    if (result.count >= limit) {
-      throw new Error(`Registration limit exceeded. Max ${limit} accounts per 24 hours from this IP.`);
+    // If limit is 0 or less, disable the check (unlimited)
+    if (limit > 0) {
+        const window = 24 * 60 * 60; // 24 hours in seconds
+        const timeThreshold = Math.floor(Date.now() / 1000) - window;
+        
+        const countStmt = db.prepare('SELECT count(*) as count FROM users WHERE registration_ip = ? AND created_at > ?');
+        const result = countStmt.get(ip, timeThreshold);
+        
+        if (result.count >= limit) {
+          throw new Error(`Registration limit exceeded. Max ${limit} accounts per 24 hours from this IP.`);
+        }
     }
   }
 
@@ -153,7 +160,7 @@ export async function changePassword(userId, oldPassword, newPassword) {
 }
 
 export async function getUserById(userId) {
-  const stmt = db.prepare('SELECT id, username, role, status, nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment, show_scroll_buttons, points, last_checkin_date FROM users WHERE id = ?');
+  const stmt = db.prepare('SELECT id, username, role, status, nickname, qq, email, phone, download_preference, notify_on_reply, notify_on_comment, show_scroll_buttons, points, last_checkin_date, created_at FROM users WHERE id = ?');
   const user = stmt.get(userId);
   
   if (user) {
@@ -163,6 +170,20 @@ export async function getUserById(userId) {
     
     const today = new Date().toISOString().split('T')[0];
     user.isCheckedIn = user.last_checkin_date === today;
+  }
+  
+  return user;
+}
+
+export async function getPublicUserProfile(userId) {
+  const stmt = db.prepare('SELECT id, username, nickname, role, status, created_at, points, qq FROM users WHERE id = ?');
+  const user = stmt.get(userId);
+  
+  if (user) {
+    const rank = getRank(user.points || 0);
+    user.rankLevel = rank.level;
+    user.rankTitle = rank.title;
+    // Don't expose sensitive fields or internal flags
   }
   
   return user;

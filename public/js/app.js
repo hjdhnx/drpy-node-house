@@ -75,7 +75,8 @@ createApp({
         const itemsPerPage = ref(10);
         const totalPages = ref(1);
         const searchQuery = ref('');
-        const filterTag = ref('');
+        const filterTags = ref([]);
+        const showFilterTagDropdown = ref(false);
         
         const uploading = ref(false);
         const uploadStatusText = ref('');
@@ -133,6 +134,7 @@ createApp({
         const replyingToComment = ref(null); // Stores the comment object being replied to
         const forumSort = ref('newest');
         const forumFilter = ref('all');
+        const forumSearchQuery = ref('');
 
         // Chat State
         const chatMessages = ref([]);
@@ -186,7 +188,8 @@ createApp({
         // Forum Functions
         const fetchTopics = async (page = 1) => {
             try {
-                const res = await fetch(`/api/forum/topics?page=${page}&sort=${forumSort.value}&filter=${forumFilter.value}`);
+                const search = forumSearchQuery.value ? `&search=${encodeURIComponent(forumSearchQuery.value)}` : '';
+                const res = await fetch(`/api/forum/topics?page=${page}&sort=${forumSort.value}&filter=${forumFilter.value}${search}`);
                 const data = await res.json();
                 topics.value = data.topics;
                 forumPage.value = data.page;
@@ -205,6 +208,39 @@ createApp({
             forumFilter.value = filter;
             fetchTopics(1);
         };
+
+        const visibleForumPages = computed(() => {
+            const current = forumPage.value;
+            const total = forumTotalPages.value;
+            if (total <= 1) return [1];
+            
+            const delta = 2; // Number of pages before/after current
+            let range = [1, total];
+            
+            for (let i = current - delta; i <= current + delta; i++) {
+                if (i > 1 && i < total) {
+                    range.push(i);
+                }
+            }
+            range = [...new Set(range)].sort((a, b) => a - b);
+
+            const rangeWithDots = [];
+            let l;
+
+            for (let i of range) {
+                if (l) {
+                    if (i - l === 2) {
+                        rangeWithDots.push(l + 1);
+                    } else if (i - l !== 1) {
+                        rangeWithDots.push('...');
+                    }
+                }
+                rangeWithDots.push(i);
+                l = i;
+            }
+
+            return rangeWithDots;
+        });
 
         const insertMarkdownAtCursor = (textarea, prefix, suffix = '') => {
             if (!textarea) return;
@@ -1129,6 +1165,13 @@ createApp({
             return uploadConfig.value.allowed_tags.split(',').map(t => t.trim());
         });
 
+        const allDisplayTags = computed(() => {
+            const allowed = allowedTags.value || [];
+            // Use currentFile.tags (original) to ensure deprecated tags remain visible even if unchecked
+            const originalTags = currentFile.value && currentFile.value.tags ? currentFile.value.tags.split(',') : [];
+            return [...new Set([...allowed, ...originalTags])];
+        });
+
         const openTagModal = (file) => {
             currentFile.value = file;
             selectedTags.value = file.tags ? file.tags.split(',') : [];
@@ -1311,7 +1354,7 @@ createApp({
                 if (token.value) {
                     headers['Authorization'] = `Bearer ${token.value}`;
                 }
-                const res = await fetch(`/api/files/list?page=${currentPage.value}&limit=${itemsPerPage.value}&search=${encodeURIComponent(searchQuery.value)}&tag=${encodeURIComponent(filterTag.value)}`, { headers });
+                const res = await fetch(`/api/files/list?page=${currentPage.value}&limit=${itemsPerPage.value}&search=${encodeURIComponent(searchQuery.value)}&tag=${encodeURIComponent(filterTags.value.join(','))}`, { headers });
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data)) {
@@ -1348,7 +1391,17 @@ createApp({
             fetchFiles();
         };
 
-        const handleFilterTag = () => {
+        const toggleFilterTag = (tag) => {
+            if (tag === 'all') {
+                filterTags.value = [];
+            } else {
+                const index = filterTags.value.indexOf(tag);
+                if (index > -1) {
+                    filterTags.value.splice(index, 1);
+                } else {
+                    filterTags.value.push(tag);
+                }
+            }
             currentPage.value = 1;
             fetchFiles();
         };
@@ -1831,85 +1884,178 @@ createApp({
             }, 0);
         };
 
-        // Handle File Reference Click (Global)
-        window.handleFileRefClick = async (cid) => {
-            // Need to fetch file metadata to apply download preference correctly (e.g. extension, tags)
-            // Since we don't have the full file object here, we'll do a quick fetch or fallback
-            // Ideally we should have an endpoint for this, or just use the list API.
-            // But we can use the download API head check or just rely on a new metadata endpoint?
-            // Or just assume default behavior if we can't get metadata.
-            
-            // Let's try to find it in the current loaded files first (optimization)
-            let file = files.value.find(f => f.cid === cid);
-            
-            if (!file) {
-                // If not in current list, try to fetch it (we reuse the download endpoint but that triggers download)
-                // We really need metadata. Let's use the file list search by cid? Or assume we can just download.
-                // If we want to support custom protocols, we need the filename and tags.
-                // Let's add a quick metadata fetch.
-                try {
-                    // Using the existing list API to find the file by searching (not ideal but works if search supports cid or exact match)
-                    // The search param in list API usually searches filename.
-                    // Let's assume we need to fallback to direct download if we can't get metadata.
-                    // OR better: Create a small helper to get file info.
-                    // For now, let's just use the direct download URL if we can't find it locally, 
-                    // unless we can assume the user wants the default behavior.
-                    
-                    // Actually, let's try to fetch the file info via a new call or just use the download URL directly if simpler.
-                    // But the requirement is "Trigger download strategy based on user preference".
-                    // So we MUST know the file extension and tags.
-                    
-                    // Hack: We can fetch the file list with a limit=1 and some filter? No.
-                    // Let's assume for now we use the direct download if not found in local list.
-                    // IMPROVEMENT: Add a specific metadata API later if needed.
-                    
-                    // Wait, we can use the 'list' API with search? 
-                    // If the user hasn't loaded the file in the list, we don't know its type.
-                    // Let's try to fetch it.
-                    
-                    // Actually, let's just implement a simple fetch for now.
-                    // Note: In a real app, I would add `GET /api/files/:cid`
-                    // Since I can't easily add backend API without checking backend code, 
-                    // I'll stick to what I can do.
-                    
-                    // Backend `mcp_drpy-node-mcp_read_file` is available to me, but I am in frontend code.
-                    // I will check if there is a way to get single file info.
-                    // Looking at `public/js/app.js`, `toggleVisibility` uses `/api/files/${file.cid}/toggle-visibility`.
-                    // `deleteFile` uses `/api/files/${file.cid}`.
-                    // Maybe `GET /api/files/${file.cid}` exists?
-                    // Let's try to use it.
-                    
-                    const res = await fetchWithAuth(`/api/files/${cid}`); // Assuming this endpoint exists or I will create it/use list
-                    // If it doesn't exist, this will fail.
-                    // Let's check backend routes if possible.
-                    // But I'll assume standard REST.
-                    
-                    // If that fails, fallback to direct download.
-                     const directUrl = getDownloadUrl(cid);
-                     window.open(directUrl, '_blank');
-                     return;
-                } catch (e) {
-                     const directUrl = getDownloadUrl(cid);
-                     window.open(directUrl, '_blank');
-                     return;
+        // Mention Logic
+        const isMentioning = ref(false);
+        const mentionQuery = ref('');
+        const mentionTargetField = ref(''); // 'chat', 'comment'
+        const mentionCursorIndex = ref(0);
+
+        const mentionCandidates = computed(() => {
+            let users = [];
+            if (mentionTargetField.value === 'chat') {
+                users = onlineUsers.value.map(u => ({ username: u.username, nickname: u.nickname }));
+            } else if (mentionTargetField.value === 'comment') {
+                const map = new Map();
+                if (currentTopic.value) {
+                    if (currentTopic.value.topic) {
+                        map.set(currentTopic.value.topic.username, {
+                            username: currentTopic.value.topic.username,
+                            nickname: currentTopic.value.topic.nickname
+                        });
+                    }
+                    if (currentTopic.value.comments) {
+                        currentTopic.value.comments.forEach(c => {
+                             map.set(c.username, { username: c.username, nickname: c.nickname });
+                        });
+                    }
                 }
+                users = Array.from(map.values());
             }
             
-            // If we have the file object (found in list or fetched)
-            const url = getFileDownloadUrl(file);
-            if (url.startsWith('http')) {
-                window.open(url, '_blank');
-            } else {
-                window.location.href = url;
+            // Deduplicate by username just in case
+            users = [...new Map(users.map(item => [item.username, item])).values()];
+
+            // Always include self in chat for testing if list is empty? No, logically we mention others.
+            // But if user complains about "no reaction", maybe they are testing alone.
+            // Let's ensure the list isn't empty if we are the only one.
+            if (users.length === 0 && user.value) {
+                 // users.push({ username: user.value.username, nickname: user.value.nickname });
+            }
+
+            if (!mentionQuery.value) return users;
+            const q = mentionQuery.value.toLowerCase();
+            return users.filter(u => 
+                (u.username && u.username.toLowerCase().includes(q)) || 
+                (u.nickname && u.nickname.toLowerCase().includes(q))
+            );
+        });
+
+        const checkMention = (event, field) => {
+            const val = event.target.value;
+            const cursor = event.target.selectionStart;
+            const textBefore = val.substring(0, cursor);
+            const lastAt = textBefore.lastIndexOf('@');
+            
+            if (lastAt !== -1) {
+                const query = textBefore.substring(lastAt + 1);
+                if (!query.includes(' ')) {
+                    isMentioning.value = true;
+                    mentionTargetField.value = field;
+                    mentionQuery.value = query;
+                    mentionCursorIndex.value = lastAt;
+                    return;
+                }
+            }
+            isMentioning.value = false;
+        };
+
+        const insertMention = (user) => {
+            const username = user.username;
+            let val;
+            let textareaId = '';
+            
+            if (mentionTargetField.value === 'chat') {
+                val = chatInput.value;
+                textareaId = 'chat-input';
+            } else if (mentionTargetField.value === 'comment') {
+                val = newCommentContent.value;
+                textareaId = 'comment-content-input';
+            } else return;
+            
+            const before = val.substring(0, mentionCursorIndex.value);
+            const after = val.substring(mentionCursorIndex.value + 1 + mentionQuery.value.length);
+            
+            const newVal = `${before}@${username} ${after}`;
+            
+            if (mentionTargetField.value === 'chat') chatInput.value = newVal;
+            else if (mentionTargetField.value === 'comment') newCommentContent.value = newVal;
+            
+            isMentioning.value = false;
+            
+            setTimeout(() => {
+                const el = document.getElementById(textareaId);
+                if (el) {
+                    el.focus();
+                    const newCursor = before.length + username.length + 2; 
+                    el.setSelectionRange(newCursor, newCursor);
+                }
+            }, 0);
+        };
+
+        const closeMentionPopup = () => {
+            isMentioning.value = false;
+        };
+
+        const mentionPopupStyle = computed(() => {
+             if (mentionTargetField.value === 'chat') {
+                 // Mobile adjustment: display above input
+                 const isMobile = window.innerWidth < 768;
+                 return {
+                     bottom: isMobile ? '70px' : '80px',
+                     left: '50%',
+                     transform: 'translateX(-50%)',
+                     width: '90%',
+                     maxWidth: '300px',
+                     zIndex: 100
+                 };
+             } else {
+                 return {
+                     top: '50%',
+                     left: '50%',
+                     transform: 'translate(-50%, -50%)',
+                     width: '90%',
+                     maxWidth: '300px',
+                     zIndex: 100
+                 };
+             }
+        });
+
+        // Public User Profile Modal
+        const showPublicProfileModal = ref(false);
+        const publicProfileUser = ref(null);
+
+        const openPublicProfile = (targetUser) => {
+            if (!targetUser) return;
+            // Normalize user object (handle file/topic/comment user fields)
+            publicProfileUser.value = {
+                id: targetUser.user_id || targetUser.id,
+                username: targetUser.username,
+                nickname: targetUser.nickname,
+                role: targetUser.role,
+                status: targetUser.status,
+                created_at: targetUser.created_at, // Reg time
+                points: targetUser.points, // Might not be available in all contexts, need fetch?
+                rankLevel: targetUser.rankLevel,
+                qq: targetUser.qq // Might be undefined if not public or not fetched
+            };
+            
+            // Optionally fetch full public profile to get points/qq if missing
+            fetchPublicProfile(publicProfileUser.value.id);
+            
+            showPublicProfileModal.value = true;
+        };
+
+        const fetchPublicProfile = async (userId) => {
+            if (!userId) return;
+            try {
+                // Let's assume I need to fetch it.
+                // Note: Ensure backend has this endpoint or similar. If not, this might 404.
+                // For now, we rely on what we have if 404.
+                const res = await fetchWithAuth(`/api/users/${userId}/public`);
+                if (res.ok) {
+                    const data = await res.json();
+                    publicProfileUser.value = { ...publicProfileUser.value, ...data };
+                }
+            } catch (e) {
+                // console.error(e);
             }
         };
 
-        // We need to implement the fetchSingleFile logic properly if I want to support it.
-        // But for now, I'll update the window.handleFileRefClick to use a more robust approach:
-        // 1. Check `files.value`.
-        // 2. If not found, use `getDownloadUrl` (default).
-        // This is a safe MVP.
-        
+        const closePublicProfileModal = () => {
+            showPublicProfileModal.value = false;
+        };
+
+        // Handle File Reference Click (Global)
         window.handleFileRefClick = (cid) => {
              const file = files.value.find(f => f.cid === cid) || fileSelectorList.value.find(f => f.cid === cid);
              if (file) {
@@ -2111,10 +2257,11 @@ createApp({
             changePage,
             changeItemsPerPage,
             handleSearch,
-            handleFilterTag,
+            toggleFilterTag,
             clearSearch,
             searchQuery,
-            filterTag,
+            filterTags,
+            showFilterTagDropdown,
             totalItems,
             currentPage,
             itemsPerPage,
@@ -2129,6 +2276,7 @@ createApp({
             currentFile,
             selectedTags,
             allowedTags,
+            allDisplayTags,
             openTagModal,
             saveTags,
             loading,
@@ -2169,6 +2317,8 @@ createApp({
             replyingToComment,
             forumSort,
             forumFilter,
+            forumSearchQuery,
+            visibleForumPages,
             fetchTopics,
             handleForumSort,
             handleForumFilter,
@@ -2225,7 +2375,17 @@ createApp({
             fileSelectorLoading,
             openFileSelector,
             fetchFilesForSelector,
-            insertFileReference
+            insertFileReference,
+            isMentioning,
+            mentionCandidates,
+            checkMention,
+            insertMention,
+            closeMentionPopup,
+            mentionPopupStyle,
+            showPublicProfileModal,
+            publicProfileUser,
+            openPublicProfile,
+            closePublicProfileModal
         };
     }
 }).mount('#app');

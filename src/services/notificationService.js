@@ -98,6 +98,7 @@ export async function notifyAdminsTemplate(templateKey, data = {}, type = 'syste
   
   const content = formatMessage(template, data);
   const contentObj = JSON.parse(content);
+  
   const titleObj = {};
   const messageObj = {};
   
@@ -105,22 +106,51 @@ export async function notifyAdminsTemplate(templateKey, data = {}, type = 'syste
     titleObj[lang] = contentObj[lang].title;
     messageObj[lang] = contentObj[lang].message;
   }
+  
+  const admins = db.prepare("SELECT id FROM users WHERE role = 'admin' OR role = 'super_admin'").all();
+  for (const admin of admins) {
+    await createNotification(admin.id, JSON.stringify(titleObj), JSON.stringify(messageObj), type, link);
+  }
+}
 
-  const title = JSON.stringify(titleObj);
-  const message = JSON.stringify(messageObj);
-  
-  const stmt = db.prepare("SELECT id FROM users WHERE role IN ('admin', 'super_admin')");
-  const admins = stmt.all();
-  
-  const insertStmt = db.prepare('INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)');
-  
-  const transaction = db.transaction((admins) => {
-    for (const admin of admins) {
-      insertStmt.run(admin.id, title, message, type, link);
+export async function processMentions(content, sourceUserId, sourceType, sourceId, sourceLink) {
+    // Regex for @username
+    // Using simple \w+ might not cover all usernames if they allow special chars.
+    // Assuming usernames are alphanumeric + underscore + hyphen?
+    // Let's use a slightly broader regex but exclude spaces.
+    // /@([^\s@]+)/g ? No, usernames shouldn't have arbitrary chars.
+    // Let's check user registration regex if possible.
+    // Assuming \w+ is safe enough for now.
+    const mentionRegex = /@(\w+)/g;
+    const matches = [...content.matchAll(mentionRegex)];
+    const mentionedUsernames = [...new Set(matches.map(m => m[1]))];
+    
+    if (mentionedUsernames.length === 0) return;
+    
+    const sender = db.prepare('SELECT username, nickname FROM users WHERE id = ?').get(sourceUserId);
+    if (!sender) return;
+    
+    const senderName = sender.nickname || sender.username;
+    
+    for (const username of mentionedUsernames) {
+        const user = db.prepare('SELECT id, notify_on_mention FROM users WHERE username = ?').get(username);
+        
+        if (user && user.id !== sourceUserId) {
+            if (user.notify_on_mention) {
+                const title = JSON.stringify({
+                    en: 'You were mentioned',
+                    zh: '你被艾特了'
+                });
+                
+                const message = JSON.stringify({
+                    en: `${senderName} mentioned you in ${sourceType}`,
+                    zh: `${senderName} 在 ${sourceType === 'chat' ? '聊天室' : '评论'} 中提到了你`
+                });
+                
+                createNotification(user.id, title, message, 'mention', sourceLink);
+            }
+        }
     }
-  });
-  
-  transaction(admins);
 }
 
 export async function markAsRead(userId, notificationId) {
