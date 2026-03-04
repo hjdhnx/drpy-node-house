@@ -1,4 +1,4 @@
-<div class="fixed right-4 bottom-24 z-40 flex flex-col gap-2" v-if="user && user.show_scroll_buttons">
+<div class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 mobile-fixed" v-if="user && user.show_scroll_buttons" style="pointer-events: auto; transform: translateY(-50%);">
     <button 
         @click="scrollToTop" 
         class="p-2 bg-white/80 backdrop-blur text-gray-600 rounded-full shadow-lg hover:bg-purple-600 hover:text-white transition-all transform hover:scale-110 border border-gray-100"

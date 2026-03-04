@@ -204,7 +204,7 @@ createApp({
                 connectChat();
                 setTimeout(() => {
                     scrollToBottom();
-                }, 100);
+                }, 300); // 增加延迟确保移动端DOM完全渲染
             }
         };
 
@@ -674,6 +674,11 @@ createApp({
                 const container = document.getElementById('chat-container');
                 if (container) {
                     container.scrollTop = container.scrollHeight;
+                    // 确保输入框在可视区域内 - 移动端优化
+                    const inputElement = document.getElementById('chat-input');
+                    if (inputElement && window.innerWidth < 768) {
+                        inputElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
                 }
             }, 100);
         };

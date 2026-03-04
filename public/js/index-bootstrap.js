@@ -4,7 +4,7 @@ const fragmentTargets = [
     { id: 'community-sidebars-fragment', url: '/fragments/community-sidebars.html' },
     { id: 'footer-fragment', url: '/fragments/footer.html' },
     { id: 'scroll-buttons-fragment', url: '/fragments/scroll-buttons.html' },
-    { id: 'mobile-scroll-shortcuts-fragment', url: '/fragments/mobile-scroll-shortcuts.html' },
+    // { id: 'mobile-scroll-shortcuts-fragment', url: '/fragments/mobile-scroll-shortcuts.html' },
     { id: 'emoji-picker-fragment', url: '/fragments/emoji-picker.html' },
     { id: 'auth-modals-fragment', url: '/fragments/auth-modals.html' },
     { id: 'forum-overlays-fragment', url: '/fragments/forum-overlays.html' },

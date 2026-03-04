@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>去中心化文件存储</title>
+    <style>
+        /* 移动端固定定位优化 */
+        @supports (-webkit-touch-callout: none) {
+            .mobile-fixed {
+                position: fixed !important;
+                -webkit-transform: translateZ(0) !important;
+                transform: translateZ(0) !important;
+                -webkit-backface-visibility: hidden !important;
+                backface-visibility: hidden !important;
+            }
+        }
+        /* 其他移动端浏览器 */
+        @media screen and (max-width: 768px) {
+            .mobile-fixed {
+                position: fixed !important;
+                transform: translateZ(0) !important;
+            }
+        }
+    </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="/js/lib/tailwindcss.js"></script>
     <script type="importmap">
@@ -929,7 +948,7 @@
                 </div>
             </div>
         </main>
-        <div id="scroll-buttons-fragment"></div>
+        <div id="scroll-buttons-fragment" class="fixed inset-0 pointer-events-none z-40"></div>
 
 
 
