@@ -50,19 +50,29 @@ export default async function (fastify, opts) {
       const page = parseInt(request.query.page) || 1;
       const limit = parseInt(request.query.limit) || 10;
       const search = request.query.search || '';
+      const status = request.query.status || '';
       const offset = (page - 1) * limit;
 
       let countSql = 'SELECT count(*) as total FROM users';
-      let dataSql = 'SELECT id, username, role, status, reason, created_at, nickname, qq, email, phone, download_preference FROM users';
+      let dataSql = 'SELECT id, username, role, status, reason, created_at, nickname, qq, email, phone, download_preference, points FROM users';
       const countParams = [];
       const dataParams = [];
 
+      const whereConditions = [];
       if (search) {
-        const whereClause = ' WHERE username LIKE ? OR reason LIKE ?';
-        countSql += whereClause;
-        dataSql += whereClause;
+        whereConditions.push('(username LIKE ? OR reason LIKE ?)');
         countParams.push(`%${search}%`, `%${search}%`);
         dataParams.push(`%${search}%`, `%${search}%`);
+      }
+      if (status && ['active', 'pending', 'banned'].includes(status)) {
+        whereConditions.push('status = ?');
+        countParams.push(status);
+        dataParams.push(status);
+      }
+      if (whereConditions.length > 0) {
+        const whereClause = ` WHERE ${whereConditions.join(' AND ')}`;
+        countSql += whereClause;
+        dataSql += whereClause;
       }
 
       dataSql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
@@ -89,13 +99,22 @@ export default async function (fastify, opts) {
   // Update user role/status/profile
   fastify.put('/users/:id', { onRequest: [requireAdmin] }, async (request, reply) => {
     const { id } = request.params;
-    const { role, status, nickname, qq, email, phone, download_preference } = request.body;
+    const { role, status, nickname, qq, email, phone, download_preference, points } = request.body;
     
     if (role && !['admin', 'user', 'super_admin'].includes(role)) {
       return reply.code(400).send({ error: 'Invalid role' });
     }
     if (status && !['active', 'pending', 'banned'].includes(status)) {
       return reply.code(400).send({ error: 'Invalid status' });
+    }
+    const hasPointsUpdate = Object.prototype.hasOwnProperty.call(request.body, 'points');
+    let targetUser = null;
+    let parsedPoints = null;
+    if (hasPointsUpdate) {
+      parsedPoints = Number(points);
+      if (!Number.isInteger(parsedPoints) || parsedPoints < 0) {
+        return reply.code(400).send({ error: 'Invalid points' });
+      }
     }
 
     // Check nickname uniqueness if provided
@@ -104,6 +123,16 @@ export default async function (fastify, opts) {
         if (check.get(nickname, id)) {
             return reply.code(409).send({ error: 'Nickname already exists' });
         }
+    }
+
+    try {
+      targetUser = db.prepare('SELECT id, points FROM users WHERE id = ?').get(id);
+      if (!targetUser) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to update user' });
     }
 
     const updates = [];
@@ -115,6 +144,7 @@ export default async function (fastify, opts) {
     if (email !== undefined) { updates.push('email = ?'); params.push(email); }
     if (phone !== undefined) { updates.push('phone = ?'); params.push(phone); }
     if (download_preference !== undefined) { updates.push('download_preference = ?'); params.push(download_preference); }
+    if (hasPointsUpdate) { updates.push('points = ?'); params.push(parsedPoints); }
 
     if (updates.length === 0) {
       return reply.code(400).send({ error: 'No updates provided' });
@@ -124,10 +154,12 @@ export default async function (fastify, opts) {
     
     try {
       const stmt = db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`);
-      const info = stmt.run(...params);
+      stmt.run(...params);
 
-      if (info.changes === 0) {
-        return reply.code(404).send({ error: 'User not found' });
+      if (hasPointsUpdate && parsedPoints !== targetUser.points) {
+        const amount = parsedPoints - targetUser.points;
+        db.prepare('INSERT INTO user_points_history (user_id, amount, reason, related_id) VALUES (?, ?, ?, ?)')
+          .run(id, amount, 'admin_points_adjust', request.user.id);
       }
 
       // Notify user on status change

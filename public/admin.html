@@ -195,31 +195,39 @@
                     <div class="glass-panel rounded-2xl shadow-sm overflow-hidden border-0 ring-1 ring-gray-900/5 flex flex-col h-full min-h-0">
                         <!-- Search & Filters -->
                         <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col lg:flex-row justify-between items-center shrink-0 gap-4 lg:gap-0">
-                            <form @submit.prevent="handleUserSearch" class="relative w-full lg:w-auto">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </span>
-                                <input 
-                                    v-model="userSearchQuery" 
-                                    @keyup.enter="handleUserSearch"
-                                    type="search"
-                                    enterkeyhint="search"
-                                    :placeholder="t.searchUserPlaceholder" 
-                                    class="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white w-full lg:w-64 transition-all"
-                                >
-                                <button 
-                                    v-if="userSearchQuery" 
-                                    type="button"
-                                    @click="clearUserSearch"
-                                    class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </form>
+                            <div class="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <form @submit.prevent="handleUserSearch" class="relative w-full lg:w-auto">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </span>
+                                    <input 
+                                        v-model="userSearchQuery" 
+                                        @keyup.enter="handleUserSearch"
+                                        type="search"
+                                        enterkeyhint="search"
+                                        :placeholder="t.searchUserPlaceholder" 
+                                        class="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white w-full lg:w-64 transition-all"
+                                    >
+                                    <button 
+                                        v-if="userSearchQuery" 
+                                        type="button"
+                                        @click="clearUserSearch"
+                                        class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </form>
+                                <select v-model="userStatusFilter" @change="handleUserStatusFilter" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 py-2 px-3 w-full sm:w-auto">
+                                    <option value="">{{ t.userStatusAll }}</option>
+                                    <option value="pending">{{ t.userStatus.pending }}</option>
+                                    <option value="active">{{ t.userStatus.active }}</option>
+                                    <option value="banned">{{ t.userStatus.banned }}</option>
+                                </select>
+                            </div>
 
                             <div class="flex items-center space-x-2 text-sm text-gray-600 w-full lg:w-auto justify-between lg:justify-end">
                                 <select v-model="usersPerPage" @change="changeUsersPerPage" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1.5 px-2">
@@ -264,6 +272,7 @@
                                         <th class="px-3 py-3 lg:px-6 lg:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.reason }}</th>
                                         <th class="px-3 py-3 lg:px-6 lg:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.userRole.user }}</th>
                                         <th class="px-3 py-3 lg:px-6 lg:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.statusLabel }}</th>
+                                        <th class="px-3 py-3 lg:px-6 lg:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.points }}</th>
                                         <th class="px-3 py-3 lg:px-6 lg:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.registerTitle }}</th>
                                         <th class="px-3 py-3 lg:px-6 lg:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.actions }}</th>
                                     </tr>
@@ -303,6 +312,7 @@
                                                 {{ t.userStatus[u.status] || u.status }}
                                             </span>
                                         </td>
+                                        <td class="px-3 py-3 lg:px-6 lg:py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">{{ u.points ?? 0 }}</td>
                                         <td class="px-3 py-3 lg:px-6 lg:py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(u.created_at) }}</td>
                                         <td class="px-3 py-3 lg:px-6 lg:py-4 whitespace-nowrap text-right text-sm font-medium space-x-2 opacity-100 lg:opacity-60 lg:group-hover:opacity-100 transition-opacity">
                                             <button v-if="u.status === 'pending'" @click="updateUserStatus(u.id, 'active')" class="text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-lg transition-colors">{{ t.approve }}</button>
@@ -713,6 +723,10 @@
                                             </svg>
                                         </button>
                                     </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ t.points }}</label>
+                                    <input v-model.number="selectedUser.points" type="number" min="0" step="1" class="block w-full px-3 py-1.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ t.downloadPreference }}</label>

@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS = {
     // File Uploads
     allowed_extensions: '.json,.txt,.py,.php,.js,.m3u,.png,.jpg,.jpeg,.gif',
     max_file_size: 512000, // 500KB in bytes
-    allowed_tags: 'ds,dr2,catvod,php,hipy,优,失效,加密', // Updated with '优', '失效', '加密'
+    allowed_tags: 'ds,dr2,catvod,php,hipy,优,失效,密',
     
     // Anonymous Access
     anonymous_upload: 'false',

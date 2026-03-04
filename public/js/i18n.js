@@ -167,6 +167,7 @@ export const zh = {
     icpNumber: 'ICP备案号',
     searchUserPlaceholder: '搜索用户或理由...',
     searchUser: '搜索用户',
+    userStatusAll: '全部状态',
     generateInvite: '生成邀请码',
     inviteCode: '邀请码',
     creator: '创建者',
@@ -297,6 +298,7 @@ export const zh = {
     view_pay: '支付查看',
     view_earn: '被查看收益',
     checkin_bonus: '签到奖励',
+    admin_points_adjust: '管理员调整积分',
     
     // Error Codes
     topic_not_found: '话题不存在',
@@ -502,6 +504,7 @@ export const en = {
     icpNumber: 'ICP Number',
     searchUserPlaceholder: 'Search users or reasons...',
     searchUser: 'Search User',
+    userStatusAll: 'All Statuses',
     generateInvite: 'Generate Invite',
     inviteCode: 'Invite Code',
     creator: 'Creator',
@@ -620,6 +623,7 @@ export const en = {
     view_pay: 'Paid to View',
     view_earn: 'Earned from View',
     checkin_bonus: 'Check-in Bonus',
+    admin_points_adjust: 'Admin Adjusted Points',
     // Error Codes
     loading: 'Loading...',
     clipboardCopied: 'Copied to clipboard',

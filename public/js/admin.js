@@ -25,12 +25,13 @@ createApp({
         const usersPerPage = ref(10);
         const totalUserPages = ref(1);
         const userSearchQuery = ref('');
+        const userStatusFilter = ref('');
         
         const settings = ref({ 
             registration_policy: 'open',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
             max_file_size: 204800,
-            allowed_tags: 'ds,dr2,catvod,php,hipy,优,失效',
+            allowed_tags: 'ds,dr2,catvod,php,hipy,优,失效,密',
             anonymous_upload: 'false',
             anonymous_preview: 'false',
             anonymous_download: 'false',
@@ -128,7 +129,13 @@ createApp({
 
         const fetchUsers = async () => {
             try {
-                const res = await fetchWithAuth(`/api/admin/users?page=${currentUserPage.value}&limit=${usersPerPage.value}&search=${encodeURIComponent(userSearchQuery.value)}`);
+                const query = new URLSearchParams({
+                    page: String(currentUserPage.value),
+                    limit: String(usersPerPage.value),
+                    search: userSearchQuery.value,
+                    status: userStatusFilter.value
+                });
+                const res = await fetchWithAuth(`/api/admin/users?${query.toString()}`);
                 const data = await res.json();
                 
                 if (data.users) {
@@ -158,6 +165,11 @@ createApp({
         };
 
         const handleUserSearch = () => {
+            currentUserPage.value = 1;
+            fetchUsers();
+        };
+
+        const handleUserStatusFilter = () => {
             currentUserPage.value = 1;
             fetchUsers();
         };
@@ -233,6 +245,7 @@ createApp({
             if (!selectedUser.value.download_preference) {
                 selectedUser.value.download_preference = 'default';
             }
+            selectedUser.value.points = Number.isFinite(Number(selectedUser.value.points)) ? parseInt(selectedUser.value.points, 10) : 0;
             showUserDetailsModal.value = true;
         };
 
@@ -245,6 +258,7 @@ createApp({
                 if (selectedUser.value.email !== undefined) payload.email = selectedUser.value.email;
                 if (selectedUser.value.phone !== undefined) payload.phone = selectedUser.value.phone;
                 if (selectedUser.value.download_preference !== undefined) payload.download_preference = selectedUser.value.download_preference;
+                if (selectedUser.value.points !== undefined) payload.points = parseInt(selectedUser.value.points, 10);
 
                 const res = await fetchWithAuth(`/api/admin/users/${selectedUser.value.id}`, {
                     method: 'PUT',
@@ -549,7 +563,9 @@ createApp({
             changeUserPage,
             changeUsersPerPage,
             userSearchQuery,
+            userStatusFilter,
             handleUserSearch,
+            handleUserStatusFilter,
             clearUserSearch,
             isSidebarOpen,
             t,
