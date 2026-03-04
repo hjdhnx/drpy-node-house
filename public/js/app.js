@@ -725,6 +725,20 @@ createApp({
             }
         };
 
+        const handleForumDetailWheel = (event) => {
+            if (currentView.value !== 'forum' || !currentTopic.value) return;
+            const el = forumDetailContainer.value || document.getElementById('forum-detail-container');
+            if (!el) return;
+            if (el.scrollHeight <= el.clientHeight) return;
+
+            const max = el.scrollHeight - el.clientHeight;
+            const next = Math.min(max, Math.max(0, el.scrollTop + event.deltaY));
+            if (next !== el.scrollTop) {
+                el.scrollTop = next;
+                event.preventDefault();
+            }
+        };
+
         const parseNotificationContent = (content) => {
             try {
                 const obj = JSON.parse(content);
@@ -2366,6 +2380,7 @@ createApp({
             sendChatMessage,
             renderMarkdown,
             handleMdAction,
+            handleForumDetailWheel,
             scrollToTop: scrollToTopAction,
             scrollToBottom: scrollToBottomAction,
             chatContainer,

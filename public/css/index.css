@@ -33,7 +33,6 @@ input[type="search"]::-webkit-search-results-decoration {
 @media (min-width: 1024px) {
     body, html {
         height: 100%;
-        overflow: hidden;
     }
     #app {
         height: 100%;
@@ -66,6 +65,17 @@ input[type="search"]::-webkit-search-results-decoration {
         flex: 1;
         overflow-y: auto;
         min-height: 0;
+    }
+    #forum-detail-container {
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 transparent;
+    }
+    #forum-detail-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    #forum-detail-container::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
     }
     ::-webkit-scrollbar {
         width: 6px;

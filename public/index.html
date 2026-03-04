@@ -31,9 +31,10 @@
 
         <!-- Main Content -->
         <div v-else class="h-full min-h-0 flex flex-col">
-            <div class="flex flex-col h-full min-h-0 animate-fade-in">
-                <div id="top-header-fragment"></div>
-
+            <div id="top-header-fragment" class="fixed top-0 inset-x-0 z-50 px-2 pt-2 lg:static lg:px-0 lg:pt-0"></div>
+            <div class="flex flex-col flex-1 min-h-0 animate-fade-in relative">
+                <div class="h-[108px] sm:h-[116px] lg:hidden flex-shrink-0"></div>
+                
         <main class="flex-1 min-h-0 flex flex-col gap-2 lg:grid lg:grid-cols-12 lg:gap-2 overflow-hidden relative w-full">
             <!-- Upload Sidebar -->
             <div class="lg:col-span-4 space-y-2 lg:space-y-4 lg:overflow-y-auto lg:pr-2 lg:h-full scrollable-column flex-shrink-0 lg:max-h-full" :class="{'hidden lg:block': currentView !== 'files'}">
@@ -419,8 +420,8 @@
                 </div>
             </div>
             <!-- Forum View -->
-            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden overflow-hidden flex flex-col gap-4 flex-1 min-h-0 relative">
-                <div v-if="!currentTopic" class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full lg:w-auto lg:h-full">
+            <div v-if="currentView === 'forum'" class="lg:col-span-8 lg:h-full lg:overflow-hidden overflow-hidden flex flex-col gap-4 flex-1 min-h-0 h-full relative">
+                <div v-if="!currentTopic" class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 lg:w-auto">
                     <div class="p-4 border-b border-gray-100 bg-white/50 flex-shrink-0 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
                         <div class="flex items-center w-full lg:w-auto min-w-0">
                             <h2 class="text-lg font-bold text-gray-800 flex items-center min-w-0 mr-auto lg:mr-3">
@@ -504,7 +505,7 @@
                         </div>
                     </div>
 
-                    <div id="forum-list-container" ref="forumListContainer" class="flex-1 overflow-y-auto p-4 scroll-smooth">
+                    <div id="forum-list-container" ref="forumListContainer" class="flex-1 min-h-0 overflow-y-auto p-4 scroll-smooth">
                         <div v-if="topics.length === 0" class="flex flex-col items-center justify-center h-64 text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -601,7 +602,7 @@
                 </div>
 
                 <!-- Topic Detail -->
-                <div v-else class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col h-full min-h-0 w-full lg:h-full">
+                <div v-else class="glass-panel rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 h-full w-full" @wheel="handleForumDetailWheel">
                     <div class="p-3 border-b border-gray-100 flex flex-col bg-white/50 flex-shrink-0">
                         <div class="flex items-start justify-between gap-2.5">
                             <div class="flex items-center min-w-0">
@@ -661,7 +662,7 @@
                         </div>
                     </div>
                     
-                    <div id="forum-detail-container" ref="forumDetailContainer" class="flex-1 min-h-0 overflow-y-auto p-3 scroll-smooth">
+                    <div id="forum-detail-container" ref="forumDetailContainer" class="flex-1 min-h-0 overflow-y-scroll overscroll-contain p-3 scroll-smooth">
                         <h2 class="text-base md:text-lg font-semibold text-gray-800 mb-3 leading-snug break-words">{{ currentTopic.topic.title }}</h2>
                         <!-- Main Post -->
                         <div class="mb-4">
@@ -936,7 +937,7 @@
 
         <div id="footer-fragment"></div>
         </div> <!-- End of animate-fade-in wrapper -->
-        </div>
+        </div> <!-- End of main content wrapper -->
         <div id="mobile-scroll-shortcuts-fragment"></div>
         <div id="forum-overlays-fragment"></div>
         <div id="main-modals-fragment"></div>
