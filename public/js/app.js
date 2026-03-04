@@ -168,8 +168,31 @@ createApp({
         const showOnlineUsersModal = ref(false);
         const showSiteInfoPopover = ref(false);
 
-        const switchView = (view) => {
+        const updateViewUrl = (view, topicId = null, replace = false) => {
+            const url = new URL(window.location);
+            if (view && view !== 'files') {
+                url.searchParams.set('view', view);
+            } else {
+                url.searchParams.delete('view');
+            }
+            if (view === 'forum' && topicId) {
+                url.searchParams.set('topic', topicId);
+            } else {
+                url.searchParams.delete('topic');
+            }
+            if (replace) {
+                window.history.replaceState({}, '', url);
+            } else {
+                window.history.pushState({}, '', url);
+            }
+        };
+
+        const switchView = (view, options = {}) => {
+            const { syncUrl = true, replaceUrl = false } = options;
             currentView.value = view;
+            if (syncUrl) {
+                updateViewUrl(view, null, replaceUrl);
+            }
             // Scroll to top when switching to fixed views (forum/chat) to ensure proper layout
             if (view !== 'files') {
                 window.scrollTo(0, 0);
@@ -307,10 +330,7 @@ createApp({
             try {
                 // Update URL if not forcing refresh (which implies we are already viewing it)
                 if (!forceRefresh) {
-                    const url = new URL(window.location);
-                    url.searchParams.set('view', 'forum');
-                    url.searchParams.set('topic', id);
-                    window.history.pushState({}, '', url);
+                    updateViewUrl('forum', id);
                 }
 
                 let url = `/api/forum/topics/${id}`;
@@ -349,9 +369,7 @@ createApp({
         const closeTopic = () => {
             currentTopic.value = null;
             // Update URL
-            const url = new URL(window.location);
-            url.searchParams.delete('topic');
-            window.history.pushState({}, '', url);
+            updateViewUrl('forum');
             
             fetchTopics(forumPage.value);
             window.scrollTo(0, 0);
@@ -802,7 +820,7 @@ createApp({
                         const topicId = params.get('topic');
 
                         if (view) {
-                            switchView(view);
+                            switchView(view, { syncUrl: false });
                             if (view === 'forum' && topicId) {
                                 openTopic(topicId);
                             }
@@ -2183,14 +2201,14 @@ createApp({
             const topicId = urlParams.get('topic');
             
             if (view === 'forum') {
-                switchView('forum');
+                switchView('forum', { syncUrl: false });
                 if (topicId) {
                     // Wait for topics to load or just open it directly
                     // openTopic fetches by ID so it doesn't need the list
                     openTopic(topicId);
                 }
             } else if (view === 'chat') {
-                switchView('chat');
+                switchView('chat', { syncUrl: false });
             }
             
             // Handle browser back/forward navigation
@@ -2203,7 +2221,7 @@ createApp({
                     // switchView('forum') calls fetchTopics(), but we need to ensure it's called
                     // if we are just closing the topic.
                     // If we are already in forum view, switchView sets currentView and calls fetchTopics.
-                    switchView('forum');
+                    switchView('forum', { syncUrl: false });
                     if (topicId) {
                         openTopic(topicId, true); // Use forceRefresh to be safe
                     } else {
@@ -2213,9 +2231,9 @@ createApp({
                         currentTopic.value = null;
                     }
                 } else if (view === 'chat') {
-                    switchView('chat');
+                    switchView('chat', { syncUrl: false });
                 } else {
-                    switchView('files');
+                    switchView('files', { syncUrl: false });
                 }
             });
             
