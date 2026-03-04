@@ -1,5 +1,6 @@
 const fragmentTargets = [
     { id: 'top-header-fragment', url: '/fragments/top-header.html' },
+    { id: 'community-sidebars-fragment', url: '/fragments/community-sidebars.html' },
     { id: 'footer-fragment', url: '/fragments/footer.html' },
     { id: 'scroll-buttons-fragment', url: '/fragments/scroll-buttons.html' },
     { id: 'mobile-scroll-shortcuts-fragment', url: '/fragments/mobile-scroll-shortcuts.html' },
