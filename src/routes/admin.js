@@ -420,7 +420,9 @@ export default async function (fastify, opts) {
                         folder = 'spider/js_dr2/';
                     } else if (tags.includes('catvod')) {
                         folder = 'spider/catvod/';
-                    } else {
+                    } else if (tags.includes('jx')) {
+                        folder = 'jx/';
+                    }else {
                         folder = 'spider/js/';
                     }
                 } else if (ext === '.php') {

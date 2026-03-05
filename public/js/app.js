@@ -1828,6 +1828,8 @@ createApp({
                   lang = 'dr2';
                } else if (tags.includes('catvod')) {
                   lang = 'catvod';
+               }else if (tags.includes('jx')) {
+                   lang = 'jx';
                } else {
                   lang = 'ds';
                }
