@@ -377,7 +377,7 @@
                                     <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.owner }}</th>
                                     <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.fileVisibility }}</th>
                                     <th class="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ t.uploadDate }}</th>
-                                    <th class="px-2 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)]">{{ t.actions }}</th>
+                                    <th class="px-2 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10 shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)] w-24">{{ t.actions }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white/30">
@@ -431,28 +431,28 @@
                                         {{ formatDate(file.created_at) }}
                                     </td>
                                     <td class="px-2 py-3 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/90 backdrop-blur-sm shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.05)] group-hover:bg-blue-50/90 transition-colors" :class="activeMenuFileId === file.id ? 'z-50' : 'z-10'">
-                                        <div class="flex items-center justify-end space-x-3 opacity-60 group-hover:opacity-100 transition-opacity relative">
+                                        <div class="flex items-center justify-end space-x-1 opacity-80 group-hover:opacity-100 transition-opacity relative">
                                             <!-- Preview -->
-                                            <a v-if="canPreview" :href="getDownloadUrl(file.cid, true, file.id)" target="_blank" class="text-teal-600 hover:text-teal-800 transition-colors" :title="t.preview">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <a v-if="canPreview" :href="getDownloadUrl(file.cid, true, file.id)" target="_blank" class="p-1.5 rounded-lg text-teal-600 hover:text-teal-800 hover:bg-teal-50 transition-colors" :title="t.preview">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 5 8.268 7.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </a>
-                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingPreview : t.loginToPreview">
-                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <span v-else class="p-1.5 text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingPreview : t.loginToPreview">
+                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                                 </svg>
                                             </span>
 
                                             <!-- Download -->
-                                            <a v-if="canDownload" :href="getFileDownloadUrl(file)" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors" :title="t.download">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <a v-if="canDownload" :href="getFileDownloadUrl(file)" target="_blank" class="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" :title="t.download">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                 </svg>
                                             </a>
-                                            <span v-else class="text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingDownload : t.loginToDownload">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <span v-else class="p-1.5 text-gray-300 cursor-not-allowed" :title="user && user.status === 'pending' ? t.pendingDownload : t.loginToDownload">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
@@ -460,8 +460,8 @@
 
                                             <!-- Menu Action -->
                                             <div class="relative" :class="{ 'invisible': !isOwner(file) }">
-                                                <button @click.stop="toggleFileMenu(file.id)" class="action-menu-btn p-1.5 rounded-full transition-all duration-200 outline-none focus:ring-2 focus:ring-purple-100" :class="activeMenuFileId === file.id ? 'bg-purple-50 text-purple-600 ring-2 ring-purple-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <button @click.stop="toggleFileMenu(file.id)" class="action-menu-btn p-1.5 rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-purple-100" :class="activeMenuFileId === file.id ? 'bg-purple-50 text-purple-600 ring-2 ring-purple-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                                     </svg>
                                                 </button>
