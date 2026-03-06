@@ -1,4 +1,6 @@
-const FRAGMENT_LOAD_MODE = 'api_bundle'; // 新模式
+import { mountApp } from './app.js';
+
+const FRAGMENT_LOAD_MODE = 'api_bundle';
 // const FRAGMENT_LOAD_MODE = 'parallel_requests'; // 旧模式
 const FRAGMENT_BUNDLE_URL = '/api/fragments';
 
@@ -66,7 +68,7 @@ async function bootstrap() {
     } catch (error) {
         console.error(error);
     } finally {
-        await import('/js/app.js');
+        mountApp();
     }
 }
 

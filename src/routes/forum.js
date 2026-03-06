@@ -109,10 +109,10 @@ export default async function forumRoutes(fastify, options) {
         if (topic.view_permission_level > 0) {
              if (!freshUser) {
                  accessDenied = true;
-                 denyReason = 'login_required';
+                 denyReason = 'loginRequired';
              } else if ((freshUser.rankLevel || 0) < topic.view_permission_level && freshUser.role !== 'admin' && freshUser.role !== 'super_admin' && freshUser.id !== topic.user_id) {
                  accessDenied = true;
-                 denyReason = 'rank_too_low';
+                 denyReason = 'rankTooLow';
              }
         }
 
@@ -130,7 +130,7 @@ export default async function forumRoutes(fastify, options) {
 
             if (!hasPurchased) {
                 accessDenied = true;
-                denyReason = freshUser ? 'purchaseRequired' : 'login_required';
+                denyReason = freshUser ? 'purchaseRequired' : 'loginRequired';
             }
         }
 

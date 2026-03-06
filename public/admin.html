@@ -5,11 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>
+        // Suppress Tailwind CSS warnings
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            const msg = args.join(' ');
+            if (msg.includes('cdn.tailwindcss.com') || 
+                msg.includes('@tailwindcss/line-clamp') || 
+                msg.includes('Remove it from the `plugins` array')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="/js/lib/tailwindcss.js"></script>
     <script type="importmap">
         {
             "imports": {
-                "vue": "/js/lib/vue.esm-browser.js"
+                "vue": "/dist/vendor.bundle.js",
+                "marked": "/dist/vendor.bundle.js",
+                "dompurify": "/dist/vendor.bundle.js"
             }
         }
     </script>

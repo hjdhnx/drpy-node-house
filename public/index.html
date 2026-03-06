@@ -24,8 +24,21 @@
         }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>
+        // Suppress Tailwind CSS warnings
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            const msg = args.join(' ');
+            if (msg.includes('cdn.tailwindcss.com') || 
+                msg.includes('@tailwindcss/line-clamp') || 
+                msg.includes('Remove it from the `plugins` array')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="/js/lib/tailwindcss.js"></script>
-    <script type="importmap">
+    <!-- <script type="importmap">
         {
             "imports": {
                 "vue": "/js/lib/vue.esm-browser.js",
@@ -33,7 +46,7 @@
                 "dompurify": "/js/lib/purify.es.mjs"
             }
         }
-    </script>
+    </script> -->
     <link rel="stylesheet" href="/css/index.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -706,7 +719,7 @@
                                 <h3 class="text-lg font-bold text-gray-800 mb-2">{{ t.accessDenied }}</h3>
                                 <p class="text-gray-600 mb-4">{{ t[currentTopic.topic.deny_reason] || currentTopic.topic.deny_reason }}</p>
                                 
-                                <div v-if="currentTopic.topic.deny_reason === 'rank_too_low'" class="text-sm text-red-500 font-medium bg-red-50 px-3 py-1 rounded-full inline-block">
+                                <div v-if="currentTopic.topic.deny_reason === 'rankTooLow'" class="text-sm text-red-500 font-medium bg-red-50 px-3 py-1 rounded-full inline-block">
                                     {{ t.minRank }}: {{ t.ranks[currentTopic.topic.view_permission_level] || currentTopic.topic.view_permission_level }}
                                 </div>
 
@@ -717,7 +730,7 @@
                                     <span v-if="user && user.points < currentTopic.topic.view_points_required">{{ t.insufficientPoints }} ({{ user.points }} / {{ currentTopic.topic.view_points_required }})</span>
                                     <span v-else>{{ t.purchase }} ({{ currentTopic.topic.view_points_required }} {{ t.points }})</span>
                                 </button>
-                                <button v-if="currentTopic.topic.deny_reason === 'login_required'" 
+                                <button v-if="currentTopic.topic.deny_reason === 'loginRequired'"
                                     @click="showLogin = true"
                                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform hover:scale-105 active:scale-95">
                                     {{ t.loginToView || t.login }}
@@ -948,14 +961,9 @@
                 </div>
             </div>
         </main>
-        <div id="scroll-buttons-fragment" class="fixed inset-0 pointer-events-none z-40"></div>
-
-
-
-
-
         <div id="footer-fragment"></div>
         </div> <!-- End of animate-fade-in wrapper -->
+        <div id="scroll-buttons-fragment" class="fixed inset-0 pointer-events-none z-40"></div>
         </div> <!-- End of main content wrapper -->
         <div id="mobile-scroll-shortcuts-fragment"></div>
         <div id="forum-overlays-fragment"></div>
@@ -965,6 +973,15 @@
         <div id="auth-modals-fragment"></div>
     </div>
 
+    <script type="importmap">
+        {
+            "imports": {
+                "vue": "/dist/vendor.bundle.js",
+                "marked": "/dist/vendor.bundle.js",
+                "dompurify": "/dist/vendor.bundle.js"
+            }
+        }
+    </script>
     <script type="module" src="/js/index-bootstrap.js"></script>
 </body>
 </html>

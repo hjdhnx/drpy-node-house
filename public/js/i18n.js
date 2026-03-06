@@ -607,9 +607,7 @@ export const en = {
     insufficientPoints: 'Insufficient Points',
     accessDenied: 'Access Denied',
     loginRequired: 'Login Required',
-    login_required: 'Login Required',
     rankTooLow: 'Rank Too Low',
-    rank_too_low: 'Rank Too Low',
     purchaseRequired: 'Purchase Required',
     ranks: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger'],
     // New translations

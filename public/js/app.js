@@ -3,33 +3,47 @@ import { zh, en } from './i18n.js';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-createApp({
+// Make globals available for potential inline scripts or debugging
+window.marked = marked;
+window.DOMPurify = DOMPurify;
+
+const app = createApp({
     setup() {
         // Markdown Helper
         const renderMarkdown = (text) => {
             if (!text) return '';
             try {
                 const renderer = new marked.Renderer();
-                const linkRenderer = renderer.link;
-                renderer.link = (href, title, text) => {
-                    const html = linkRenderer.call(renderer, href, title, text);
-                    return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
-                };
-                const imageRenderer = renderer.image;
-                renderer.image = (href, title, text) => {
-                    const html = imageRenderer.call(renderer, href, title, text);
-                    return html.replace(/^<img /, '<img class="max-w-full max-h-[300px] object-contain rounded-lg cursor-pointer hover:scale-[1.02] transition-transform" onclick="window.open(this.src, \'_blank\')" ');
-                };
+                const originalLink = renderer.link.bind(renderer);
+                const originalImage = renderer.image.bind(renderer);
 
-                // Custom dsfile:// renderer
-                const originalLinkRenderer = renderer.link;
                 renderer.link = (href, title, text) => {
-                    if (href && href.startsWith('dsfile://')) {
+                    let token = null;
+                    if (typeof href === 'object' && href !== null) {
+                        token = href;
+                        href = token.href;
+                        title = token.title;
+                        text = token.text;
+                    }
+                    if (typeof href === 'string' && href.startsWith('dsfile://')) {
                         const cid = href.replace('dsfile://', '');
                         // Use global handler
                         return `<a href="javascript:void(0)" onclick="window.handleFileRefClick('${cid}')" class="text-purple-600 hover:text-purple-800 hover:underline inline-flex items-center gap-0.5 font-medium transition-colors" title="Click to download"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>${text}</a>`;
                     }
-                    return originalLinkRenderer.call(renderer, href, title, text).replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+                    const html = token ? originalLink(token) : originalLink(href, title, text);
+                    return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+                };
+
+                renderer.image = (href, title, text) => {
+                    let token = null;
+                    if (typeof href === 'object' && href !== null) {
+                        token = href;
+                        href = token.href;
+                        title = token.title;
+                        text = token.text;
+                    }
+                    const html = token ? originalImage(token) : originalImage(href, title, text);
+                    return html.replace(/^<img /, '<img class="max-w-full max-h-[300px] object-contain rounded-lg cursor-pointer hover:scale-[1.02] transition-transform" onclick="window.open(this.src, \'_blank\')" ');
                 };
 
                 const html = marked.parse(text, { breaks: true, renderer });
@@ -346,7 +360,7 @@ createApp({
                 const data = await res.json();
                 
                 // Check for auth mismatch (Frontend thinks logged in, Backend says login required)
-                if (data.topic && data.topic.access_denied && data.topic.deny_reason === 'login_required') {
+                if (data.topic && data.topic.access_denied && data.topic.deny_reason === 'loginRequired') {
                     if (user.value) {
                         console.warn('Backend rejected auth token. Logging out.');
                         logout(false);
@@ -2428,4 +2442,13 @@ createApp({
             closePublicProfileModal
         };
     }
-}).mount('#app');
+});
+
+export function mountApp() {
+    // Check if app is already mounted or if #app exists
+    const container = document.getElementById('app');
+    if (container && !container.__vue_app__) {
+        app.mount('#app');
+    }
+}
+
