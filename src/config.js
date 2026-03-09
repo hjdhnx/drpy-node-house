@@ -23,7 +23,7 @@ export default {
 // This file acts as the single source of truth for default system settings.
 export const DEFAULT_SETTINGS = {
     // Registration & Auth
-    registration_policy: 'open', // open, closed, approval, invite
+    registration_policy: 'approval', // open, closed, approval, invite
     registration_ip_limit: 2, // Max accounts per IP per 24h
     
     // Security
@@ -48,11 +48,11 @@ export const DEFAULT_SETTINGS = {
     // Admin Features
     package_download_mode: 'essential', // 'essential' or 'all',
     download_protocols: JSON.stringify({
-        "海阔视界": "hiker://sub?lang={{lang}}&url={{url}}",
-        "影图": "yt://sub?lang={{lang}}&url={{url}}",
-        "皮卡丘": "peekpili://sub?lang={{lang}}&url={{url}}",
-        "影视+": "vodplus://sub?lang={{lang}}&url={{url}}",
-        "ZYFUN": "zyfun://sub?lang={{lang}}&url={{url}}"
+        "海阔视界": "hiker://sub?lang={{lang}}&name={{name}}&url={{url}}",
+        "影图": "yt://sub?lang={{lang}}&name={{name}}&url={{url}}",
+        "皮卡丘": "peekpili://sub?lang={{lang}}&name={{name}}&url={{url}}",
+        "影视+": "vodplus://sub?lang={{lang}}&name={{name}}&url={{url}}",
+        "ZYFUN": "zyfun://sub?lang={{lang}}&name={{name}}&url={{url}}"
     }, null, 2),
     
     // Notifications

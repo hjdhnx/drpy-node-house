@@ -20,7 +20,7 @@ export async function initSuperAdmin() {
 export async function getRegistrationPolicy() {
   const stmt = db.prepare("SELECT value FROM settings WHERE key = 'registration_policy'");
   const result = stmt.get();
-  return result ? result.value : 'open';
+  return result ? result.value : DEFAULT_SETTINGS.registration_policy;
 }
 
 export async function getUploadConfig() {

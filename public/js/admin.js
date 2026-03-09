@@ -28,7 +28,7 @@ createApp({
         const userStatusFilter = ref('');
         
         const settings = ref({ 
-            registration_policy: 'open',
+            registration_policy: 'approval',
             allowed_extensions: '.json,.txt,.py,.php,.js,.m3u',
             max_file_size: 204800,
             image_compression_enabled: 'true',
