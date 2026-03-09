@@ -2209,8 +2209,22 @@ const app = createApp({
         };
 
         // Handle File Reference Click (Global)
-        window.handleFileRefClick = (cid) => {
-             const file = files.value.find(f => f.cid === cid) || fileSelectorList.value.find(f => f.cid === cid);
+        window.handleFileRefClick = async (cid) => {
+             let file = files.value.find(f => f.cid === cid) || fileSelectorList.value.find(f => f.cid === cid);
+             
+             if (!file) {
+                 try {
+                     const res = await fetch(`/api/files/${cid}`, {
+                         headers: { 'Authorization': `Bearer ${token.value}` }
+                     });
+                     if (res.ok) {
+                         file = await res.json();
+                     }
+                 } catch (e) {
+                     console.error('Failed to fetch file metadata:', e);
+                 }
+             }
+
              if (file) {
                  const url = getFileDownloadUrl(file);
                  if (url.startsWith('http')) {

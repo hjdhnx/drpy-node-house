@@ -3,6 +3,7 @@ import db from '../db.js';
 import { CID } from 'multiformats/cid';
 import sharp from 'sharp';
 import { getUploadConfig } from './authService.js';
+import { getRank } from './pointsService.js';
 
 export async function uploadFile(file, userId = null, isPublic = true, maxSize = 0, tags = '') {
   const { fs } = await getHelia();
@@ -302,21 +303,37 @@ export async function getFileStream(cidString, userOrId = null, fileId = null) {
                   break;
               }
               // Free topic
-              if (topic.view_points_required <= 0) {
-                  if (topic.view_permission_level <= 0 || userId) {
-                      authorized = true;
-                      fileRecord = refFile;
-                      break;
+              if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) {
+                  authorized = true;
+                  fileRecord = refFile;
+                  break;
+              }
+
+              let canView = true;
+
+              // Check Permission Level (Rank)
+              if (topic.view_permission_level > 0) {
+                   const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
+                   const userPoints = user ? user.points : 0;
+                   const userRank = getRank(userPoints);
+                   
+                   if (userRank.level < topic.view_permission_level) {
+                       canView = false;
+                   }
+              }
+
+              // Check Points Required (Purchase)
+              if (canView && topic.view_points_required > 0) {
+                  const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
+                  if (!purchase) {
+                      canView = false;
                   }
               }
-              // Purchased topic
-              if (topic.view_points_required > 0) {
-                  const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
-                  if (purchase) {
-                      authorized = true;
-                      fileRecord = refFile;
-                      break;
-                  }
+              
+              if (canView) {
+                  authorized = true;
+                  fileRecord = refFile;
+                  break;
               }
           }
       }
