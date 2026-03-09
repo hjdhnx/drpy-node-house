@@ -102,125 +102,17 @@ export async function uploadFile(file, userId = null, isPublic = true, maxSize =
 }
 
 export function getFile(cid, userId = null, userRole = 'user', fileId = null) {
-  const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
-  const files = stmt.all(cid);
-  
-  if (files.length === 0) throw new Error('File not found');
+  const { authorized, fileRecord, error } = checkFileAccess(cid, userId, userRole, fileId);
 
-  // Priority 0: Specific File ID
-  if (fileId) {
-      const specificFile = files.find(f => f.id == fileId);
-      if (specificFile) {
-           // Check permission for this specific file
-           if (specificFile.is_public === 1) return specificFile;
-           if (userId && specificFile.user_id === userId) return specificFile;
-           if (userRole === 'admin' || userRole === 'super_admin') return specificFile;
-      }
-      // If found but unauthorized, or not found in this CID group (mismatch?), fall through?
-      // If mismatch (CID doesn't match ID), it won't be in `files`.
-      // If unauthorized, fall through to see if we can give them *another* file? 
-      // See discussion above: Safer to fall through to public version if unauthorized for private specific version.
+  if (!authorized) {
+    throw new Error(error || 'Unauthorized');
   }
 
-  // Priority 1: User's own file
-  if (userId) {
-      const ownFile = files.find(f => f.user_id === userId);
-      if (ownFile) return ownFile;
+  if (!fileRecord) {
+      throw new Error('File not found');
   }
 
-  // Priority 2: Public file
-  const publicFile = files.find(f => f.is_public === 1);
-  if (publicFile) return publicFile;
-
-  // Priority 3: Admin access
-  if (userRole === 'admin' || userRole === 'super_admin') {
-      return files[0];
-  }
-
-  // Priority 4: Check if referenced in topics/comments/chat (Access via reference)
-  if (userId) {
-      const refFile = files[0];
-      const cidString = cid; // cid is already string here
-
-      // Check 2: Is file linked in a purchased/free topic?
-      const topicsWithFile = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE content LIKE ?').all(`%${cidString}%`);
-      
-      for (const topic of topicsWithFile) {
-          // Topic author
-          if (topic.user_id === userId) return refFile;
-          
-          // Free topic
-          if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) return refFile;
-
-          let canView = true;
-
-          // Check Permission Level (Rank)
-          if (topic.view_permission_level > 0) {
-               const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
-               const userPoints = user ? user.points : 0;
-               const userRank = getRank(userPoints);
-               
-               if (userRank.level < topic.view_permission_level) {
-                   canView = false;
-               }
-          }
-
-          // Check Points Required (Purchase)
-          if (canView && topic.view_points_required > 0) {
-              const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
-              if (!purchase) {
-                  canView = false;
-              }
-          }
-          
-          if (canView) return refFile;
-      }
-
-      // Check 3: Linked in comments?
-      const commentsWithFile = db.prepare('SELECT id, topic_id FROM comments WHERE content LIKE ?').all(`%${cidString}%`);
-      
-      for (const comment of commentsWithFile) {
-          // Get topic info to check permissions
-          const topic = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE id = ?').get(comment.topic_id);
-          
-          if (!topic) continue;
-
-          // Topic author (can see everything in their topic)
-          if (topic.user_id === userId) return refFile;
-
-          // Free topic
-          if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) return refFile;
-
-          let canView = true;
-
-          // Check Permission Level (Rank)
-          if (topic.view_permission_level > 0) {
-               const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
-               const userPoints = user ? user.points : 0;
-               const userRank = getRank(userPoints);
-               
-               if (userRank.level < topic.view_permission_level) {
-                   canView = false;
-               }
-          }
-
-          // Check Points Required (Purchase)
-          if (canView && topic.view_points_required > 0) {
-              const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
-              if (!purchase) {
-                  canView = false;
-              }
-          }
-          
-          if (canView) return refFile;
-      }
-
-      // Check 4: Linked in chat?
-      const chatMessage = db.prepare('SELECT 1 FROM chat_messages WHERE content LIKE ? LIMIT 1').get(`%${cidString}%`);
-      if (chatMessage) return refFile;
-  }
-
-  throw new Error('Unauthorized');
+  return fileRecord;
 }
 
 export function getUploaders() {
@@ -321,171 +213,10 @@ export async function getFileStream(cidString, userOrId = null, fileId = null) {
       userId = userOrId;
   }
   
-  // Get all files with this CID to correctly handle ownership/visibility
-  const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
-  const files = stmt.all(cidString);
-  
-  let fileRecord = null;
-  let authorized = false;
+  const { authorized, fileRecord, error } = checkFileAccess(cidString, userId, userRole, fileId);
 
-  if (files.length > 0) {
-    // 0. Check specific file ID if provided (Highest Priority)
-    if (fileId) {
-        fileRecord = files.find(f => f.id == fileId);
-        if (fileRecord) {
-             // Check permission for this specific file
-             if (fileRecord.is_public === 1) {
-                 authorized = true;
-             } else if (userId && fileRecord.user_id === userId) {
-                 authorized = true;
-             } else if (userRole === 'admin' || userRole === 'super_admin') {
-                 authorized = true;
-             }
-        }
-    }
-
-    // If no specific file requested or authorized yet, fall back to priority logic
-    if (!authorized) {
-        // 1. Check if user owns any of these files (Priority 1: User's own file)
-        if (userId) {
-            fileRecord = files.find(f => f.user_id === userId);
-            if (fileRecord) authorized = true;
-        }
-
-        // 2. Check if any file is public (Priority 2: Public file)
-        if (!authorized) {
-            const publicFile = files.find(f => f.is_public === 1);
-            if (publicFile) {
-                fileRecord = publicFile;
-                authorized = true;
-            }
-        }
-
-        // 3. Admin Access
-        if (!authorized && (userRole === 'admin' || userRole === 'super_admin')) {
-            fileRecord = files[0];
-            authorized = true;
-        }
-    }
-
-    // If still not authorized, check other permissions (Topics, Chat)
-    if (!authorized && files.length > 0) {
-      // Use the first file record for metadata reference, but access is still pending
-      const refFile = files[0]; 
-
-      // Check 2: Is file linked in a purchased/free topic?
-      if (userId) {
-          // Query: Find topics containing this CID
-          const topicsWithFile = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE content LIKE ?').all(`%${cidString}%`);
-          
-          for (const topic of topicsWithFile) {
-              // Topic author
-              if (topic.user_id === userId) {
-                  authorized = true;
-                  fileRecord = refFile;
-                  break;
-              }
-              // Free topic
-              if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) {
-                  authorized = true;
-                  fileRecord = refFile;
-                  break;
-              }
-
-              let canView = true;
-
-              // Check Permission Level (Rank)
-              if (topic.view_permission_level > 0) {
-                   const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
-                   const userPoints = user ? user.points : 0;
-                   const userRank = getRank(userPoints);
-                   
-                   if (userRank.level < topic.view_permission_level) {
-                       canView = false;
-                   }
-              }
-
-              // Check Points Required (Purchase)
-              if (canView && topic.view_points_required > 0) {
-                  const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
-                  if (!purchase) {
-                      canView = false;
-                  }
-              }
-              
-              if (canView) {
-                  authorized = true;
-                  fileRecord = refFile;
-                  break;
-              }
-          }
-      }
-
-      // Check 3: Linked in comments?
-      if (!authorized && userId) {
-           const commentsWithFile = db.prepare('SELECT id, topic_id FROM comments WHERE content LIKE ?').all(`%${cidString}%`);
-           
-           for (const comment of commentsWithFile) {
-               // Get topic info to check permissions
-               const topic = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE id = ?').get(comment.topic_id);
-               
-               if (!topic) continue;
-
-               // Topic author (can see everything in their topic)
-               if (topic.user_id === userId) {
-                   authorized = true;
-                   fileRecord = refFile;
-                   break;
-               }
-
-               // Free topic
-               if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) {
-                   authorized = true;
-                   fileRecord = refFile;
-                   break;
-               }
-
-               let canView = true;
-
-               // Check Permission Level (Rank)
-               if (topic.view_permission_level > 0) {
-                    const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
-                    const userPoints = user ? user.points : 0;
-                    const userRank = getRank(userPoints);
-                    
-                    if (userRank.level < topic.view_permission_level) {
-                        canView = false;
-                    }
-               }
-
-               // Check Points Required (Purchase)
-               if (canView && topic.view_points_required > 0) {
-                   const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
-                   if (!purchase) {
-                       canView = false;
-                   }
-               }
-               
-               if (canView) {
-                   authorized = true;
-                   fileRecord = refFile;
-                   break;
-               }
-           }
-      }
-
-      // Check 4: Linked in chat?
-      if (!authorized && userId) {
-          const chatMessage = db.prepare('SELECT 1 FROM chat_messages WHERE content LIKE ? LIMIT 1').get(`%${cidString}%`);
-          if (chatMessage) {
-              authorized = true;
-              fileRecord = refFile;
-          }
-      }
-    }
-  }
-
-  if (files.length > 0 && !authorized) {
+  if (!authorized) {
+      if (error === 'File not found') throw new Error('File not found');
       throw new Error('Unauthorized access to private file');
   }
 
@@ -539,3 +270,172 @@ export function updateFileTags(id, tags, userId, userRole = 'user') {
   
     return { ...file, tags };
   }
+
+// Internal helper to check file access permissions
+// Returns { authorized: boolean, file: object }
+function checkFileAccess(cidString, userId, userRole, fileId = null) {
+    const stmt = db.prepare('SELECT * FROM files WHERE cid = ?');
+    const files = stmt.all(cidString);
+    
+    if (files.length === 0) return { authorized: false, file: null, error: 'File not found' };
+  
+    let fileRecord = null;
+    let authorized = false;
+  
+    // 0. Check specific file ID if provided (Highest Priority)
+    if (fileId) {
+        fileRecord = files.find(f => f.id == fileId);
+        if (fileRecord) {
+             // Check permission for this specific file
+             if (fileRecord.is_public === 1) {
+                 authorized = true;
+             } else if (userId && fileRecord.user_id === userId) {
+                 authorized = true;
+             } else if (userRole === 'admin' || userRole === 'super_admin') {
+                 authorized = true;
+             }
+        }
+    }
+  
+    // If no specific file requested or authorized yet, fall back to priority logic
+    if (!authorized) {
+        // 1. Check if user owns any of these files (Priority 1: User's own file)
+        if (userId) {
+            fileRecord = files.find(f => f.user_id === userId);
+            if (fileRecord) authorized = true;
+        }
+  
+        // 2. Check if any file is public (Priority 2: Public file)
+        if (!authorized) {
+            const publicFile = files.find(f => f.is_public === 1);
+            if (publicFile) {
+                fileRecord = publicFile;
+                authorized = true;
+            }
+        }
+  
+        // 3. Admin Access
+        if (!authorized && (userRole === 'admin' || userRole === 'super_admin')) {
+            fileRecord = files[0];
+            authorized = true;
+        }
+    }
+  
+    // If still not authorized, check other permissions (Topics, Chat)
+    if (!authorized && files.length > 0) {
+      // Use the first file record for metadata reference, but access is still pending
+      const refFile = files[0]; 
+  
+      // Check 2: Is file linked in a purchased/free topic?
+      if (userId) {
+          // Query: Find topics containing this CID
+          const topicsWithFile = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE content LIKE ?').all(`%${cidString}%`);
+          
+          for (const topic of topicsWithFile) {
+              // Topic author
+              if (topic.user_id === userId) {
+                  authorized = true;
+                  fileRecord = refFile;
+                  break;
+              }
+              // Free topic
+              if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) {
+                  authorized = true;
+                  fileRecord = refFile;
+                  break;
+              }
+  
+              let canView = true;
+  
+              // Check Permission Level (Rank)
+              if (topic.view_permission_level > 0) {
+                   const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
+                   const userPoints = user ? user.points : 0;
+                   const userRank = getRank(userPoints);
+                   
+                   if (userRank.level < topic.view_permission_level) {
+                       canView = false;
+                   }
+              }
+  
+              // Check Points Required (Purchase)
+              if (canView && topic.view_points_required > 0) {
+                  const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
+                  if (!purchase) {
+                      canView = false;
+                  }
+              }
+              
+              if (canView) {
+                  authorized = true;
+                  fileRecord = refFile;
+                  break;
+              }
+          }
+      }
+  
+      // Check 3: Linked in comments?
+      if (!authorized && userId) {
+           const commentsWithFile = db.prepare('SELECT id, topic_id FROM comments WHERE content LIKE ?').all(`%${cidString}%`);
+           
+           for (const comment of commentsWithFile) {
+               // Get topic info to check permissions
+               const topic = db.prepare('SELECT id, user_id, view_permission_level, view_points_required FROM topics WHERE id = ?').get(comment.topic_id);
+               
+               if (!topic) continue;
+  
+               // Topic author (can see everything in their topic)
+               if (topic.user_id === userId) {
+                   authorized = true;
+                   fileRecord = refFile;
+                   break;
+               }
+  
+               // Free topic
+               if (topic.view_points_required <= 0 && topic.view_permission_level <= 0) {
+                   authorized = true;
+                   fileRecord = refFile;
+                   break;
+               }
+  
+               let canView = true;
+  
+               // Check Permission Level (Rank)
+               if (topic.view_permission_level > 0) {
+                    const user = db.prepare('SELECT points FROM users WHERE id = ?').get(userId);
+                    const userPoints = user ? user.points : 0;
+                    const userRank = getRank(userPoints);
+                    
+                    if (userRank.level < topic.view_permission_level) {
+                        canView = false;
+                    }
+               }
+  
+               // Check Points Required (Purchase)
+               if (canView && topic.view_points_required > 0) {
+                   const purchase = db.prepare('SELECT 1 FROM topic_purchases WHERE user_id = ? AND topic_id = ?').get(userId, topic.id);
+                   if (!purchase) {
+                       canView = false;
+                   }
+               }
+               
+               if (canView) {
+                   authorized = true;
+                   fileRecord = refFile;
+                   break;
+               }
+           }
+      }
+  
+      // Check 4: Linked in chat?
+      if (!authorized && userId) {
+          const chatMessage = db.prepare('SELECT 1 FROM chat_messages WHERE content LIKE ? LIMIT 1').get(`%${cidString}%`);
+          if (chatMessage) {
+              authorized = true;
+              fileRecord = refFile;
+          }
+      }
+    }
+
+    return { authorized, fileRecord };
+}
