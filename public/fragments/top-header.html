@@ -161,5 +161,16 @@
             </div>
             <span class="font-medium truncate hidden sm:inline">{{ t.chat }}</span>
         </button>
+        <button @click="switchView('leaderboard')" 
+            class="p-1.5 rounded-xl flex items-center justify-center gap-2 transition-colors flex-1 min-w-0 md:min-w-[120px]"
+            :class="currentView === 'leaderboard' ? 'bg-yellow-50 text-yellow-600' : 'hover:bg-gray-50 text-gray-600'">
+            <div class="w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                :class="currentView === 'leaderboard' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-500'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
+            <span class="font-medium truncate hidden sm:inline">{{ t.leaderboard }}</span>
+        </button>
     </div>
 </div>

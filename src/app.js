@@ -17,6 +17,7 @@ import notificationRoutes from './routes/notifications.js';
 import forumRoutes from './routes/forum.js';
 import chatRoutes from './routes/chat.js';
 import userRoutes from './routes/users.js';
+import leaderboardRoutes from './routes/leaderboard.js';
 import { readFileSync } from 'fs';
 import { readFile } from 'fs/promises';
 
@@ -93,6 +94,7 @@ fastify.register(notificationRoutes, { prefix: '/api/notifications' });
 fastify.register(forumRoutes, { prefix: '/api/forum' });
 fastify.register(chatRoutes, { prefix: '/ws' });
 fastify.register(userRoutes, { prefix: '/api/users' });
+fastify.register(leaderboardRoutes, { prefix: '/api/leaderboard' });
 
 // Initialize services before starting
 fastify.addHook('onReady', async () => {

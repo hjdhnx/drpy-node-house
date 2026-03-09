@@ -15,7 +15,7 @@ export const zh = {
     anonymousTip: '匿名上传默认为公开',
     uploading: '上传中...',
     uploadProgress: '正在上传 {current} / {total}',
-    filesTitle: '文件列表',
+    filesTitle: '文件',
     refresh: '刷新',
     fileName: '文件名',
     fileSize: '大小',
@@ -93,7 +93,7 @@ export const zh = {
     notificationTemplatesHint: '编辑通知模板 (register_approval, account_approved, account_banned, account_unbanned)。使用 {{username}} 作为占位符。',
     // Forum & Chat
     forum: '论坛',
-    chat: '聊天室',
+    chat: '聊天',
     topics: '话题列表',
     newTopic: '发布话题',
     topicTitle: '标题',
@@ -286,7 +286,6 @@ export const zh = {
     clipboardFailed: '复制失败',
     fileTooLarge: '文件过大: {filename} (最大限制: {maxSize})',
     fileTypeNotAllowed: '文件类型不允许: {filename}',
-    checkinFailed: '签到失败',
     networkError: '网络错误',
     confirmSolve: '确定要将此评论标记为解决方案吗？',
     purchaseFailed: '购买失败',
@@ -343,7 +342,19 @@ export const zh = {
     incorrect_old_password: '旧密码错误',
     change_password_failed: '修改密码失败',
     already_checked_in: '今天已签到',
-    checkin_failed: '签到失败',
+    checkinFailed: '签到失败',
+    
+    // Leaderboard
+    leaderboard: '排行',
+    pointsLeaderboard: '积分榜',
+    rankLeaderboard: '段位榜',
+    topicLeaderboard: '话题榜',
+    commentLeaderboard: '评论榜',
+    chatLeaderboard: '聊天榜',
+    noLeaderboardData: '暂无数据',
+    topicsUnit: '话题',
+    commentsUnit: '评论',
+    msgsUnit: '消息',
 };
 
 export const en = {
@@ -645,6 +656,18 @@ export const en = {
     fileTooLarge: 'File too large: {filename} (Max: {maxSize})',
     fileTypeNotAllowed: 'File type not allowed: {filename}',
     checkinFailed: 'Check-in failed',
+
+    // Leaderboard
+    leaderboard: 'Leaderboard',
+    pointsLeaderboard: 'Points',
+    rankLeaderboard: 'Rank',
+    topicLeaderboard: 'Topics',
+    commentLeaderboard: 'Comments',
+    chatLeaderboard: 'Chat',
+    noLeaderboardData: 'No Data',
+    topicsUnit: 'topics',
+    commentsUnit: 'comments',
+    msgsUnit: 'msgs',
     networkError: 'Network error',
     confirmSolve: 'Are you sure you want to mark this comment as the solution?',
     purchaseFailed: 'Purchase failed',

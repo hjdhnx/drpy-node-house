@@ -130,13 +130,50 @@ const app = createApp({
         const allNotificationsLoading = ref(false);
         const allNotificationsHasMore = ref(true);
 
-        // View Navigation
-        const currentView = ref('files'); // 'files', 'forum', 'chat'
+         // View Navigation
+        const currentView = ref('files'); // 'files', 'forum', 'chat', 'leaderboard'
 
         // Scroll Containers
         const chatContainer = ref(null);
         const forumListContainer = ref(null);
         const forumDetailContainer = ref(null);
+        const leaderboardContainer = ref(null);
+
+        // Leaderboard State
+        const leaderboards = ref({
+            points: [],
+            rank: [],
+            topics: [],
+            comments: [],
+            chat: []
+        });
+        const leaderboardLoading = ref(false);
+        const leaderboardTab = ref('points');
+
+        const fetchLeaderboard = async () => {
+            leaderboardLoading.value = true;
+            try {
+                const res = await fetch('/api/leaderboard/stats');
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch leaderboard: ${res.statusText}`);
+                }
+                const data = await res.json();
+                console.log('Leaderboard data:', data);
+                if (data && typeof data === 'object') {
+                    leaderboards.value = {
+                        points: data.points || [],
+                        rank: data.rank || [],
+                        topics: data.topics || [],
+                        comments: data.comments || [],
+                        chat: data.chat || []
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to fetch leaderboard', e);
+            } finally {
+                leaderboardLoading.value = false;
+            }
+        };
 
         // Forum State
         const topics = ref([]);
@@ -222,6 +259,8 @@ const app = createApp({
                 setTimeout(() => {
                     scrollToBottom();
                 }, 300); // 增加延迟确保移动端DOM完全渲染
+            } else if (view === 'leaderboard') {
+                fetchLeaderboard();
             }
         };
 
@@ -2369,6 +2408,8 @@ const app = createApp({
                 }
             } else if (view === 'chat') {
                 switchView('chat', { syncUrl: false });
+            } else if (view === 'leaderboard') {
+                switchView('leaderboard', { syncUrl: false });
             }
             
             // Handle browser back/forward navigation
@@ -2392,6 +2433,8 @@ const app = createApp({
                     }
                 } else if (view === 'chat') {
                     switchView('chat', { syncUrl: false });
+                } else if (view === 'leaderboard') {
+                    switchView('leaderboard', { syncUrl: false });
                 } else {
                     switchView('files', { syncUrl: false });
                 }
@@ -2575,7 +2618,11 @@ const app = createApp({
             showPublicProfileModal,
             publicProfileUser,
             openPublicProfile,
-            closePublicProfileModal
+            closePublicProfileModal,
+            leaderboards,
+            leaderboardLoading,
+            leaderboardTab,
+            leaderboardContainer
         };
     }
 });
