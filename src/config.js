@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS = {
     // Admin Features
     package_download_mode: 'essential', // 'essential' or 'all',
     download_protocols: JSON.stringify({
-        "海阔视界": "hiker://page/importSpecialDir?rule=DrpyHiker&lang={{lang}}&name={{name}}&url={{url}}",
+        "海阔视界": "hiker://page/importSpecialDir?rule=DrpyHiker&lang={{lang}}&name={{name}}&urlc={{url}}",
         "影图": "yt://sub?lang={{lang}}&name={{name}}&url={{url}}",
         "皮卡丘": "peekpili://sub?lang={{lang}}&name={{name}}&url={{url}}",
         "影视+": "vodplus://sub?lang={{lang}}&name={{name}}&url={{url}}",
