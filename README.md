@@ -1,4 +1,4 @@
-# Decentralized File Storage (DS)
+# drpy-node-house (DSH)
 
 ![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-green.svg)
@@ -84,7 +84,7 @@
 1.  克隆仓库：
     ```bash
     git clone <repository-url>
-    cd decentralized-file-storage
+    cd drpy-node-house
     ```
 
 2.  安装依赖：
@@ -144,7 +144,7 @@ npm install -g pm2
 
 ```bash
 git clone <repository-url>
-cd decentralized-file-storage
+cd drpy-node-house
 bun install
 ```
 
