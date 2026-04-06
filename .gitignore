@@ -142,3 +142,4 @@ vite.config.ts.timestamp-*
 /data/metadata.sqlite
 /package-lock.json
 /drizzle/
+/bun.lock

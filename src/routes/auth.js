@@ -26,7 +26,7 @@ export default async function (fastify, opts) {
           'register_approval', 
           { username, reason }, 
           'approval',
-          '/admin.html'
+          '/admin'
         );
       }
 

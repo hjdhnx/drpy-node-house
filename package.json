@@ -1,6 +1,6 @@
 {
   "name": "decentralized-file-storage",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A decentralized file storage system using Bun, Fastify, and Helia (IPFS).",
   "main": "src/app.js",
   "type": "module",
@@ -8,6 +8,8 @@
     "start": "bun scripts/build-front.js && bun src/app.js",
     "dev": "bun scripts/build-front.js && bun --watch src/app.js",
     "build:front": "bun scripts/build-front.js",
+    "frontend:install": "bun install --cwd frontend",
+    "frontend:dev": "bun --cwd frontend run dev",
     "pm2": "pm2 start src/app.js --name drpysh --interpreter bun",
     "pm2:start": "pm2 start src/app.js --name drpysh --interpreter bun",
     "pm2:stop": "pm2 stop drpysh",

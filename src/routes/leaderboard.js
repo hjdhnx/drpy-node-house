@@ -1,5 +1,5 @@
 import db, { orm } from '../db.js';
-import { users, topics, comments, chatMessages } from '../schema.js';
+import { users, topics, comments, chatMessages, files } from '../schema.js';
 import { desc, sql, count, eq } from 'drizzle-orm';
 import { getRank } from '../services/pointsService.js';
 import { DEFAULT_SETTINGS } from '../config.js';
@@ -89,11 +89,28 @@ export default async function leaderboardRoutes(fastify, options) {
             .limit(limit)
             .all();
 
+            // 5. Files Leaderboard (Most active uploaders)
+            const filesLeaderboard = await orm.select({
+                id: users.id,
+                username: users.username,
+                nickname: users.nickname,
+                points: users.points,
+                count: count(files.id),
+                role: users.role
+            })
+            .from(users)
+            .leftJoin(files, eq(users.id, files.userId))
+            .groupBy(users.id)
+            .orderBy(desc(count(files.id)))
+            .limit(limit)
+            .all();
+
             const pointsWithRank = addRank(pointsLeaderboard);
 
             return {
                 points: pointsWithRank,
                 rank: pointsWithRank, // Rank leaderboard is same as points (sorted by points = sorted by rank)
+                files: addRank(filesLeaderboard),
                 topics: addRank(topicLeaderboard),
                 comments: addRank(commentLeaderboard),
                 chat: addRank(chatLeaderboard)

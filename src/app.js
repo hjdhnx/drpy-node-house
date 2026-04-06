@@ -3,7 +3,6 @@ import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
-import path from 'path';
 import config, { DEFAULT_SETTINGS } from './config.js';
 import { initHelia } from './ipfs.js';
 import { initSuperAdmin } from './services/authService.js';
@@ -19,20 +18,8 @@ import chatRoutes from './routes/chat.js';
 import userRoutes from './routes/users.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import { readFileSync } from 'fs';
-import { readFile } from 'fs/promises';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
-const fragmentTargets = [
-  { id: 'top-header-fragment', url: '/fragments/top-header.html' },
-  { id: 'file-stats-card-fragment', url: '/fragments/file-stats-card.html' },
-  { id: 'community-sidebars-fragment', url: '/fragments/community-sidebars.html' },
-  { id: 'footer-fragment', url: '/fragments/footer.html' },
-  { id: 'scroll-buttons-fragment', url: '/fragments/scroll-buttons.html' },
-  { id: 'emoji-picker-fragment', url: '/fragments/emoji-picker.html' },
-  { id: 'auth-modals-fragment', url: '/fragments/auth-modals.html' },
-  { id: 'forum-overlays-fragment', url: '/fragments/forum-overlays.html' },
-  { id: 'main-modals-fragment', url: '/fragments/main-modals.html' }
-];
 
 const fastify = Fastify({
   logger: true,
@@ -53,7 +40,6 @@ fastify.register(fastifyRateLimit, {
   max: rateLimitMax,
   timeWindow: '1 minute', // per minute
   allowList: (req) => {
-    if (req.url.startsWith('/fragments/')) return true;
     // Exclude static files (images, css, js, fonts)
     if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i)) return true;
     return false;
@@ -96,6 +82,40 @@ fastify.register(chatRoutes, { prefix: '/ws' });
 fastify.register(userRoutes, { prefix: '/api/users' });
 fastify.register(leaderboardRoutes, { prefix: '/api/leaderboard' });
 
+fastify.get('/admin', async (request, reply) => {
+  return reply.sendFile('admin.html');
+});
+
+fastify.get('/admin/', async (request, reply) => {
+  return reply.sendFile('admin.html');
+});
+
+fastify.get('/', async (request, reply) => {
+  return reply.sendFile('index.html');
+});
+
+fastify.setNotFoundHandler(async (request, reply) => {
+  const acceptHeader = request.headers.accept || '';
+  const acceptsHtml = !acceptHeader || acceptHeader.includes('text/html') || acceptHeader.includes('*/*');
+  const isSpaRoute = request.method === 'GET'
+    && acceptsHtml
+    && !request.url.startsWith('/api/')
+    && !request.url.startsWith('/ws')
+    && !request.url.startsWith('/admin')
+    && !request.url.startsWith('/assets/')
+    && !request.url.includes('.');
+
+  if (isSpaRoute) {
+    return reply.type('text/html').sendFile('index.html');
+  }
+
+  return reply.code(404).send({
+    error: 'Not Found',
+    message: `Route ${request.method}:${request.url} not found`,
+    statusCode: 404
+  });
+});
+
 // Initialize services before starting
 fastify.addHook('onReady', async () => {
   await initHelia();
@@ -104,7 +124,18 @@ fastify.addHook('onReady', async () => {
 
 // API Routes (Placeholder for now)
 fastify.get('/api/status', async (request, reply) => {
-  return { status: 'ok', timestamp: Date.now(), version: packageJson.version };
+  const isBun = typeof Bun !== 'undefined';
+  return { 
+    status: 'ok', 
+    timestamp: Date.now(), 
+    version: packageJson.version,
+    env: {
+      os: process.platform,
+      arch: process.arch,
+      runtime: isBun ? 'Bun' : 'Node',
+      version: isBun ? Bun.version : process.version
+    }
+  };
 });
 
 fastify.get('/api/config', async (request, reply) => {
@@ -128,20 +159,6 @@ fastify.get('/api/config', async (request, reply) => {
   });
   
   return publicConfig;
-});
-
-fastify.get('/api/fragments', async (request, reply) => {
-  try {
-    const entries = await Promise.all(fragmentTargets.map(async ({ id, url }) => {
-      const filePath = path.join(config.paths.public, url.replace(/^\//, ''));
-      const html = await readFile(filePath, 'utf8');
-      return [`#${id}`, html];
-    }));
-    return Object.fromEntries(entries);
-  } catch (err) {
-    request.log.error(err);
-    return reply.code(500).send({ error: 'fragments_load_failed' });
-  }
 });
 
 // Start server

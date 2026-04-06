@@ -1,0 +1,1 @@
+@supports (-webkit-touch-callout: none){.mobile-fixed{position:fixed!important;transform:translateZ(0)!important;backface-visibility:hidden!important}}@media screen and (max-width:768px){.mobile-fixed{position:fixed!important;transform:translateZ(0)!important}}
