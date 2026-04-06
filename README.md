@@ -10,7 +10,8 @@
 ## ✨ 主要特性
 
 *   **去中心化核心**：基于 [Helia](https://github.com/ipfs/helia) (IPFS)，文件内容去中心化寻址，永不丢失。
-*   **现代化 UI**：使用 Vue 3 (ESM) + Tailwind CSS 构建，拥有精美的玻璃拟态风格界面，适配 PC 和移动端。
+*   **现代化 UI**：全面升级为基于 Vue 3 (Composition API) SFC 单文件组件架构，使用 Vite 进行构建。结合 Tailwind CSS 与 Ant Design Vue，提供精美的响应式管理界面与前台展示体验，完美适配 PC 和移动端。
+*   **统一的同源架构**：前端项目(前台与后台)经 Vite 编译后自动输出至后端的 `public/` 目录，由 Fastify 统一作为单一服务入口提供访问与 API 支持。
 *   **用户功能**：
     *   **个人中心**：用户可维护昵称、QQ、邮箱、手机号等信息。
     *   **下载偏好**：支持选择直链下载或第三方协议（如海阔视界、影图、皮卡丘等），点击下载自动调用对应协议。
@@ -38,7 +39,7 @@
 *   **Backend**: Fastify, @fastify/jwt, @fastify/multipart, SQLite (bun:sqlite)
 *   **Storage**: Helia (IPFS), Blockstore/Datastore FS
 *   **Database**: SQLite (bun:sqlite) + Drizzle ORM
-*   **Frontend**: Vue 3 (ESM via Import Map), Tailwind CSS (CDN), Native HTML5 Drag & Drop API
+*   **Frontend**: Vue 3 (Composition API + SFC), Vite, Pinia, Tailwind CSS, Ant Design Vue
 
 ## 🗄️ 数据库管理
 
@@ -103,6 +104,17 @@
     ```
 
 2.  访问：打开浏览器访问 `http://localhost:5678` (默认端口已改为 5678)
+
+## 📐 开发规范与专属 Skill
+
+本项目已配置专属的 Trae/AI 开发技能 (Skill)：`drpy-node-house-dev`。
+在进行二次开发或向 AI 提问时，AI 会自动加载 `.trae/skills/drpy-node-house-dev/SKILL.md` 中的架构规范。
+
+**核心开发原则简述**：
+1. **单一服务入口**：前后端同源，前端 Vite 编译产出到 `public/`，由 Fastify 统一路由，不引入 Nginx 增加部署复杂度。
+2. **状态保持**：前台 SPA 视图切换严格使用 `v-show` + `scrollTop` 恢复，禁止使用 `v-if` 导致 DOM 销毁。
+3. **UI 规范**：废弃原生 `alert/confirm`，全面使用 Ant Design Vue 的 `message` 与封装的 `asyncConfirm`。
+4. **数据库驱动**：严格使用 `bun:sqlite`，禁止引入 `better-sqlite3`。
 
 ## 🐧 Linux 环境部署指南
 
@@ -190,22 +202,26 @@ bun scripts/manage_roles.js set <username> super_admin
 
 ## 📂 项目结构
 
-```
+```text
 .
-├── public/             # 前端静态资源 (Vue, Tailwind)
-│   ├── index.html      # 用户主页
-│   ├── admin.html      # 后台管理页
-│   └── js/             # 前端逻辑
-├── src/                # 后端源码
-│   ├── app.js          # 应用入口
-│   ├── config.js       # 配置文件 (包含 DEFAULT_SETTINGS)
-│   ├── db.js           # SQLite 数据库初始化
-│   ├── ipfs.js         # Helia IPFS 节点封装
-│   ├── routes/         # API 路由 (Auth, Files, Admin)
-│   └── services/       # 业务逻辑层
-├── scripts/            # 管理脚本
-│   └── manage_roles.js # 角色管理工具
-├── data/               # 数据存储 (SQLite & IPFS repo)
+├── src/                # 后端源码 (Bun + Fastify)
+│   ├── app.js          # 后端服务入口、生命周期与核心路由
+│   ├── config.js       # 配置模块
+│   ├── db.js           # 数据库连接
+│   ├── schema.js       # Drizzle Schema
+│   └── routes/         # 拆分的路由文件 (auth, admin, files 等)
+├── frontend/           # 前端源码工程 (Vue 3 + Vite)
+│   ├── src/
+│   │   ├── main/       # 前台主站 (Index)
+│   │   ├── admin/      # 后台管理 (Admin)
+│   │   ├── shared/     # 公共组件、工具、i18n
+│   │   └── api/        # 网络请求封装
+│   ├── vite.config.js  # Vite 多入口配置
+│   └── package.json
+├── public/             # 前端构建产物与页面宿主
+│   ├── index.html      # 前台主页面入口
+│   ├── admin.html      # 后台主页面入口
+│   └── admin/          # Vite 编译输出目录
 └── package.json
 ```
 
