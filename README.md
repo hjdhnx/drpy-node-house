@@ -1,6 +1,6 @@
 # drpy-node-house (DSH)
 
-![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.10-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-green.svg)
 
 基于 IPFS (Helia) 和 Fastify 构建的现代化去中心化文件存储系统。提供精美的 Web 界面，支持多用户管理、权限控制、标签系统以及强大的后台管理功能。
