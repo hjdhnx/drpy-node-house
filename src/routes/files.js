@@ -161,27 +161,42 @@ export default async function (fastify, opts) {
       // Ensure UTF-8 charset for text files to prevent garbled Chinese characters in browser preview
       let contentType = mimetype;
       
-      // Force text/plain for code files that browser might try to download or execute
-      // .py (text/x-python, application/x-python-code), .php (application/x-httpd-php, text/x-php)
-      // Also handle common code extensions if mimetype detection is generic
-      const textExtensions = ['.py', '.php', '.js', '.ts', '.c', '.cpp', '.h', '.java', '.rb', '.go', '.rs', '.sh', '.bat', '.cmd', '.ps1', '.sql', '.xml', '.yaml', '.yml', '.json', '.md', '.log', '.ini', '.conf'];
+      const textExtensions = ['.py', '.php', '.js', '.ts', '.c', '.cpp', '.h', '.java', '.rb', '.go', '.rs', '.sh', '.bat', '.cmd', '.ps1', '.sql', '.xml', '.yaml', '.yml', '.json', '.md', '.log', '.ini', '.conf', '.txt', '.m3u', '.css', '.html', '.htm', '.svg'];
       const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
       
+      const extMimeMap = {
+        '.js': 'text/javascript', '.ts': 'text/typescript',
+        '.json': 'application/json', '.xml': 'text/xml', '.svg': 'image/svg+xml',
+        '.html': 'text/html', '.htm': 'text/html', '.css': 'text/css',
+        '.md': 'text/markdown', '.txt': 'text/plain', '.log': 'text/plain',
+        '.py': 'text/x-python', '.php': 'text/x-php',
+        '.sh': 'text/x-shellscript', '.bat': 'text/plain', '.cmd': 'text/plain',
+        '.sql': 'text/x-sql', '.yaml': 'text/yaml', '.yml': 'text/yaml',
+        '.ini': 'text/plain', '.conf': 'text/plain', '.m3u': 'application/vnd.apple.mpegurl',
+        '.c': 'text/x-c', '.cpp': 'text/x-c++', '.h': 'text/x-c',
+        '.java': 'text/x-java-source', '.rb': 'text/x-ruby', '.go': 'text/x-go',
+        '.rs': 'text/x-rust', '.ps1': 'text/plain'
+      };
+      
       if (isPreview) {
-        if (textExtensions.includes(ext) || mimetype.startsWith('text/') || mimetype === 'application/json' || mimetype === 'application/javascript') {
-          // Force text/plain for code files to ensure they display in browser instead of downloading
-          // exception: keep html/xml/json as is if preferred, but for safety/viewing text/plain is safest for code
-          if (!mimetype.includes('html')) { // Let HTML render? Or force text? User asked for "preview" usually implies seeing source for code.
-             // For .py/.php specifically asked:
-             if (['.py', '.php'].includes(ext)) {
-               contentType = 'text/plain; charset=utf-8';
-             } else if (!contentType.includes('charset=')) {
-               contentType += '; charset=utf-8';
-             }
+        const isGenericMime = !mimetype || mimetype === 'application/octet-stream' || mimetype === 'binary/octet-stream';
+        const correctedMime = extMimeMap[ext];
+        
+        if (isGenericMime && correctedMime) {
+          contentType = correctedMime;
+        }
+        
+        if (textExtensions.includes(ext) || contentType.startsWith('text/') || contentType === 'application/json' || contentType === 'text/javascript' || contentType === 'application/javascript') {
+          if (!contentType.includes('html')) {
+            if (['.py', '.php'].includes(ext)) {
+              contentType = 'text/plain; charset=utf-8';
+            } else if (!contentType.includes('charset=')) {
+              contentType += '; charset=utf-8';
+            }
           } else {
-             if (!contentType.includes('charset=')) {
-               contentType += '; charset=utf-8';
-             }
+            if (!contentType.includes('charset=')) {
+              contentType += '; charset=utf-8';
+            }
           }
         }
       }
