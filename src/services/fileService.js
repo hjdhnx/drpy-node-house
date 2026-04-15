@@ -2,6 +2,7 @@ import { getHelia } from '../ipfs.js';
 import db from '../db.js';
 import { CID } from 'multiformats/cid';
 import sharp from 'sharp';
+import path from 'path';
 import { getUploadConfig } from './authService.js';
 import { getRank } from './pointsService.js';
 
@@ -438,4 +439,95 @@ function checkFileAccess(cidString, userId, userRole, fileId = null) {
     }
 
     return { authorized, fileRecord };
+}
+
+export async function replaceFile(fileId, newFile, userId, userRole = 'user', maxSize = 0) {
+  const stmt = db.prepare('SELECT * FROM files WHERE id = ?');
+  const existingFile = stmt.get(fileId);
+
+  if (!existingFile) throw new Error('File not found');
+  if (existingFile.user_id !== userId && userRole !== 'super_admin') throw new Error('Unauthorized');
+
+  const config = await getUploadConfig();
+  const allowedExtensions = config.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
+  const ext = path.extname(newFile.filename).toLowerCase();
+
+  if (!allowedExtensions.includes(ext)) {
+    newFile.file.resume();
+    throw new Error(`File type not allowed. Allowed: ${config.allowed_extensions}`);
+  }
+
+  const isCompressionEnabled = config.image_compression_enabled === 'true';
+  const isImage = newFile.mimetype.startsWith('image/');
+
+  const chunks = [];
+  let totalSize = 0;
+
+  for await (const chunk of newFile.file) {
+    totalSize += chunk.length;
+
+    if (maxSize > 0 && !isCompressionEnabled && !isImage && totalSize > maxSize) {
+      throw new Error(`文件体积过大。当前体积已超过限制: ${(maxSize / 1024).toFixed(2)} KB`);
+    }
+
+    if (maxSize > 0 && isCompressionEnabled && isImage && totalSize > Math.max(maxSize * 2, 52428800)) {
+      throw new Error(`文件过大无法处理，超出安全限制。`);
+    }
+
+    chunks.push(chunk);
+  }
+  let buffer = Buffer.concat(chunks);
+
+  try {
+    if (isCompressionEnabled && isImage && buffer.length > 10240) {
+      const image = sharp(buffer);
+      const metadata = await image.metadata();
+
+      let processed = null;
+      if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
+        processed = image.jpeg({ quality: 80, mozjpeg: true });
+      } else if (metadata.format === 'png') {
+        processed = image.png({ compressionLevel: 6, palette: true });
+      } else if (metadata.format === 'webp') {
+        processed = image.webp({ quality: 80 });
+      }
+
+      if (processed && (!metadata.pages || metadata.pages <= 1)) {
+        const compressedBuffer = await processed.toBuffer();
+        if (compressedBuffer.length < buffer.length) {
+          console.log(`[Image Compression] ${newFile.filename}: ${buffer.length} -> ${compressedBuffer.length} bytes`);
+          buffer = compressedBuffer;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Image Compression Error]', e);
+  }
+
+  if (maxSize > 0 && buffer.length > maxSize) {
+    throw new Error(`文件体积过大。当前体积: ${(buffer.length / 1024).toFixed(2)} KB，最大限制: ${(maxSize / 1024).toFixed(2)} KB`);
+  }
+
+  const content = new Uint8Array(buffer);
+  const { fs } = await getHelia();
+  const newCid = await fs.addBytes(content);
+  const newCidString = newCid.toString();
+
+  const now = Math.floor(Date.now() / 1000);
+  const updateStmt = db.prepare(`
+    UPDATE files SET cid = ?, filename = ?, mimetype = ?, size = ?, created_at = ?
+    WHERE id = ?
+  `);
+  updateStmt.run(newCidString, newFile.filename, newFile.mimetype, content.length, now, fileId);
+
+  const updatedFile = db.prepare('SELECT * FROM files WHERE id = ?').get(fileId);
+
+  return {
+    id: updatedFile.id,
+    cid: newCidString,
+    filename: newFile.filename,
+    size: content.length,
+    old_cid: existingFile.cid,
+    updated_at: now
+  };
 }

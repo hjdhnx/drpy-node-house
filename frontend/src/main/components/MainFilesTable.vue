@@ -1,5 +1,6 @@
 <template>
   <div ref="filesContainer" class="flex-1 file-list-body relative overflow-auto min-h-0">
+    <input ref="replaceFileInput" type="file" class="hidden" @change="handleReplaceFileSelect" />
     <table class="min-w-full divide-y divide-gray-100 relative">
       <thead class="bg-gray-50/95 sticky top-0 z-20 backdrop-blur-sm shadow-sm">
         <tr>
@@ -115,6 +116,15 @@
                         {{ t.tags }}
                       </button>
 
+                      <button class="group w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center transition-colors" @click="triggerReplaceFile(file); closeFileMenu()">
+                        <span class="p-1 rounded bg-green-50 text-green-500 group-hover:bg-green-100 group-hover:text-green-600 mr-2 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </span>
+                        {{ t.replaceFile }}
+                      </button>
+
                       <button class="group w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 flex items-center transition-colors" @click="toggleVisibility(file); closeFileMenu()">
                         <template v-if="file.is_public">
                           <span class="p-1 rounded bg-amber-50 text-amber-500 group-hover:bg-amber-100 group-hover:text-amber-600 mr-2 transition-colors">
@@ -190,6 +200,9 @@ const {
   openTagModal,
   closeFileMenu,
   toggleVisibility,
-  deleteFile
+  deleteFile,
+  replaceFileInput,
+  triggerReplaceFile,
+  handleReplaceFileSelect
 } = inject('mainApp');
 </script>

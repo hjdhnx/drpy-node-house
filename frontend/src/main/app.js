@@ -1,4 +1,4 @@
-import { ref, onMounted, computed, reactive, watch } from 'vue';
+import { ref, onMounted, computed, reactive, watch, nextTick } from 'vue';
 import { zh, en } from '../shared/i18n.js';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -1882,6 +1882,65 @@ export function useMainApp() {
             }
         };
 
+        const replaceFileInput = ref(null);
+        const replacingFileId = ref(null);
+
+        const triggerReplaceFile = (file) => {
+            replacingFileId.value = file.id;
+            closeFileMenu();
+            nextTick(() => {
+                if (replaceFileInput.value) {
+                    replaceFileInput.value.accept = fileInputAccept.value;
+                    replaceFileInput.value.click();
+                }
+            });
+        };
+
+        const handleReplaceFileSelect = async (event) => {
+            const newFile = event.target.files[0];
+            if (!newFile || !replacingFileId.value) return;
+
+            const allowed = uploadConfig.value.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
+            const ext = '.' + newFile.name.split('.').pop().toLowerCase();
+            if (!allowed.includes(ext)) {
+                message.error(t.value.fileTypeNotAllowed.replace('{filename}', newFile.name));
+                replaceFileInput.value.value = '';
+                return;
+            }
+
+            const maxSize = uploadConfig.value.max_file_size;
+            if (maxSize > 0 && newFile.size > maxSize) {
+                message.error(t.value.fileTooLarge.replace('{filename}', newFile.name).replace('{maxSize}', formatSize(maxSize)));
+                replaceFileInput.value.value = '';
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', newFile);
+
+                const res = await fetch(`/api/files/${replacingFileId.value}/replace`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token.value}` },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    message.success(t.value.replaceSuccess);
+                    await fetchFiles();
+                } else {
+                    const data = await res.json();
+                    message.error(data.error || t.value.replaceFailed);
+                }
+            } catch (e) {
+                console.error(e);
+                message.error(t.value.replaceFailed);
+            }
+
+            replaceFileInput.value.value = '';
+            replacingFileId.value = null;
+        };
+
         const isOwner = (file) => {
             if (!user.value) return false;
             if (user.value.role === 'super_admin') return true;
@@ -2590,6 +2649,9 @@ export function useMainApp() {
             getDownloadUrl,
             toggleVisibility,
             deleteFile,
+            replaceFileInput,
+            triggerReplaceFile,
+            handleReplaceFileSelect,
             isOwner,
             changePage,
             changeItemsPerPage,

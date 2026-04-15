@@ -1,8 +1,25 @@
-import { uploadFile, listFiles, getFile, getFileStream, toggleVisibility, deleteFile, updateFileTags, getUploaders } from '../services/fileService.js';
+import { uploadFile, listFiles, getFile, getFileStream, toggleVisibility, deleteFile, updateFileTags, getUploaders, replaceFile } from '../services/fileService.js';
 import { getUploadConfig } from '../services/authService.js';
 import path from 'path';
 
 export default async function (fastify, opts) {
+
+  const authenticateFlexible = async (request, reply) => {
+    try {
+      if (request.headers.authorization) {
+        await request.jwtVerify();
+        return;
+      }
+      const token = request.query.token || request.headers['x-api-token'];
+      if (token) {
+        request.user = await fastify.jwt.verify(token);
+        return;
+      }
+    } catch (e) {
+      // Fall through
+    }
+    reply.code(401).send({ error: 'Authentication required' });
+  };
   
   // Upload file
   fastify.post('/upload', async (request, reply) => {
@@ -232,6 +249,33 @@ export default async function (fastify, opts) {
       if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
       request.log.error(err);
       return reply.code(500).send({ error: 'Operation failed' });
+    }
+  });
+
+  // Replace File
+  fastify.put('/:id/replace', {
+    onRequest: [authenticateFlexible]
+  }, async (request, reply) => {
+    const { id } = request.params;
+    const user = request.user;
+
+    const data = await request.file();
+    if (!data) {
+      return reply.code(400).send({ error: 'No file uploaded' });
+    }
+
+    const config = await getUploadConfig();
+
+    try {
+      const result = await replaceFile(parseInt(id), data, user.id, user.role, config.max_file_size);
+      return result;
+    } catch (err) {
+      request.log.error(err);
+      if (err.message === 'Unauthorized') return reply.code(403).send({ error: 'Unauthorized' });
+      if (err.message === 'File not found') return reply.code(404).send({ error: 'File not found' });
+      if (err.message.includes('File type not allowed')) return reply.code(400).send({ error: err.message });
+      if (err.message.includes('过大') || err.message.includes('too large')) return reply.code(413).send({ error: err.message });
+      return reply.code(500).send({ error: 'Replace failed' });
     }
   });
 

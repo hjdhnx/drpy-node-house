@@ -1,6 +1,6 @@
 {
-  "name": "decentralized-file-storage",
-  "version": "1.0.10",
+  "name": "drpy-node-house",
+  "version": "1.0.11",
   "description": "A decentralized file storage system using Bun, Fastify, and Helia (IPFS).",
   "main": "src/app.js",
   "type": "module",
